@@ -1,0 +1,751 @@
+<html xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=utf-8">
+<meta name=ProgId content=Excel.Sheet>
+<meta name=Generator content="Microsoft Excel 9">
+<style type="text/css">
+<!--tr
+	{mso-height-source:auto;}
+td
+	{white-space:nowrap;}
+.wc05C81E5
+	{white-space:nowrap;
+	font-family:Arial;
+	mso-number-format:General;
+	font-size:auto;
+	font-weight:400;
+	font-style:auto;
+	text-decoration:auto;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	color:black;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:none;
+	border-left:none;
+	border-right:none;
+	border-bottom:none;
+	mso-protection:locked;}
+.wc41D81E5
+	{white-space:nowrap;
+	font-family:Arial;
+	mso-number-format:General;
+	font-size:auto;
+	font-weight:400;
+	font-style:italic;
+	text-decoration:auto;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	color:black;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:none;
+	border-left:none;
+	border-right:none;
+	border-bottom:none;
+	mso-protection:locked;}
+.wcC3281E5
+	{white-space:nowrap;
+	font-family:Arial;
+	mso-number-format:General;
+	font-size:auto;
+	font-weight:700;
+	font-style:italic;
+	text-decoration:auto;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	color:lime;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:none;
+	border-left:none;
+	border-right:none;
+	border-bottom:none;
+	mso-protection:locked;}
+.wcC3D71E5
+	{white-space:nowrap;
+	font-family:Arial;
+	mso-number-format:General;
+	font-size:auto;
+	font-weight:700;
+	font-style:auto;
+	text-decoration:auto;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	color:lime;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:none;
+	border-left:none;
+	border-right:none;
+	border-bottom:none;
+	mso-protection:locked;}
+-->
+</style>
+</head>
+
+<body>
+<!--[if gte mso 9]><xml>
+ <x:ExcelWorkbook>
+  <x:ExcelWorksheets>
+   <x:ExcelWorksheet>
+    <x:Label Style='background:silver;color:red;border-top:solid .5pt silver;
+     border-left:solid .5pt silver;border-right:solid .5pt silver;border-bottom:
+     solid .5pt silver'>
+     <x:Caption></x:Caption>
+    </x:Label>
+    <x:Name>Sheet1</x:Name>
+    <x:WorksheetOptions>
+     <x:Selected/>
+     <x:Height>14896</x:Height>
+     <x:Width>27517</x:Width>
+     <x:DoNotDisplayToolBar/>
+     <x:ViewableRange>1:65536</x:ViewableRange>
+     <x:Selection>I51</x:Selection>
+     <x:FreezePanes/>
+     <x:FrozenNoSplit/>
+     <x:TopRowVisible>0</x:TopRowVisible>
+     <x:TopRowBottomPane>34</x:TopRowBottomPane>
+     <x:SplitHorizontal>1</x:SplitHorizontal>
+     <x:ActivePane>2</x:ActivePane>
+     <x:ProtectContents>False</x:ProtectContents>
+     <x:DefaultRowHeight>255</x:DefaultRowHeight>
+     <x:StandardWidth>2340</x:StandardWidth>
+    </x:WorksheetOptions>
+   </x:ExcelWorksheet>
+  </x:ExcelWorksheets>
+  <x:MaxHeight>80%</x:MaxHeight>
+  <x:MaxWidth>80%</x:MaxWidth>
+ </x:ExcelWorkbook>
+</xml><![endif]-->
+
+<table class=wc05C81E5 x:str>
+ <col class=wc41D81E5 width="64">
+ <col class=wc41D81E5 width="64">
+ <col class=wc41D81E5 width="64">
+ <col class=wc41D81E5 width="64">
+ <col class=wc41D81E5 width="64">
+ <col class=wc41D81E5 width="64">
+ <col class=wc41D81E5 width="64">
+ <col class=wc05C81E5 width="64">
+ <col class=wc05C81E5 width="64">
+ <col class=wc05C81E5 width="64">
+ <tr height="17">
+  <td class=wc41D81E5>Topo</td>
+  <td class=wc41D81E5>X</td>
+  <td class=wc41D81E5>Y</td>
+  <td class=wc41D81E5>Z</td>
+  <td class=wc41D81E5>A</td>
+  <td class=wc41D81E5>B</td>
+  <td class=wc41D81E5>C</td>
+  <td class=wc05C81E5>Diam</td>
+  <td class=wc05C81E5>Id</td>
+  <td class=wc05C81E5>Id_isa</td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^/A1/S1">*^/A1/S1</td>
+  <td class=wc41D81E5 x:num="64.69">64.69</td>
+  <td class=wc41D81E5 x:num="3.41">3.41</td>
+  <td class=wc41D81E5 x:num="-82.7">-82.7</td>
+  <td class=wc41D81E5 x:num="-49.54">-49.54</td>
+  <td class=wc41D81E5 x:num="10.4">10.4</td>
+  <td class=wc41D81E5 x:num="-18.74">-18.74</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5>A</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S2">*^&lt;S2</td>
+  <td class=wc41D81E5 x:num="33.67">33.67</td>
+  <td class=wc41D81E5 x:num="-41.91">-41.91</td>
+  <td class=wc41D81E5 x:num="-82.24">-82.24</td>
+  <td class=wc41D81E5 x:num="-87.32">-87.32</td>
+  <td class=wc41D81E5 x:num="9.43">9.43</td>
+  <td class=wc41D81E5 x:num="-48.49">-48.49</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5>B</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S3">*^&lt;S3</td>
+  <td class=wc41D81E5 x:num="-8.5">-8.5</td>
+  <td class=wc41D81E5 x:num="31.97">31.97</td>
+  <td class=wc41D81E5 x:num="-164.52">-164.52</td>
+  <td class=wc41D81E5 x:num="124.25">124.25</td>
+  <td class=wc41D81E5 x:num="-5.97">-5.97</td>
+  <td class=wc41D81E5 x:num="6.23">6.23</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5>3B1</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S4">*^&lt;S4</td>
+  <td class=wc41D81E5 x:num="-148.68">-148.68</td>
+  <td class=wc41D81E5 x:num="93.5">93.5</td>
+  <td class=wc41D81E5 x:num="-133.17">-133.17</td>
+  <td class=wc41D81E5 x:num="-77.21">-77.21</td>
+  <td class=wc41D81E5 x:num="00.67">0.67</td>
+  <td class=wc41D81E5 x:num="5.22">5.22</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="1">1</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S5">*^&lt;S5</td>
+  <td class=wc41D81E5 x:num="-136.71">-136.71</td>
+  <td class=wc41D81E5 x:num="62.2">62.2</td>
+  <td class=wc41D81E5 x:num="-139.68">-139.68</td>
+  <td class=wc41D81E5 x:num="-172.53">-172.53</td>
+  <td class=wc41D81E5 x:num="-1.94">-1.94</td>
+  <td class=wc41D81E5 x:num="15.11">15.11</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="2">2</td>
+  <td class=wc05C81E5 x:num="46">46</td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S6">*^&lt;S6</td>
+  <td class=wc41D81E5 x:num="-111.26">-111.26</td>
+  <td class=wc41D81E5 x:num="25.89">25.89</td>
+  <td class=wc41D81E5 x:num="-135.48">-135.48</td>
+  <td class=wc41D81E5 x:num="173.51">173.51</td>
+  <td class=wc41D81E5 x:num="-19.1">-19.1</td>
+  <td class=wc41D81E5 x:num="23.12">23.12</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="3">3</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S7">*^&lt;S7</td>
+  <td class=wc41D81E5 x:num="53.07">53.07</td>
+  <td class=wc41D81E5 x:num="-293.66">-293.66</td>
+  <td class=wc41D81E5 x:num="35.96">35.96</td>
+  <td class=wc41D81E5 x:num="-118.85">-118.85</td>
+  <td class=wc41D81E5 x:num="-17.91">-17.91</td>
+  <td class=wc41D81E5 x:num="-10.69">-10.69</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="110">110</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S8">*^&lt;S8</td>
+  <td class=wc41D81E5 x:num="69.37">69.37</td>
+  <td class=wc41D81E5 x:num="-270.65">-270.65</td>
+  <td class=wc41D81E5 x:num="38.91">38.91</td>
+  <td class=wc41D81E5 x:num="-102.11">-102.11</td>
+  <td class=wc41D81E5 x:num="-50.35">-50.35</td>
+  <td class=wc41D81E5 x:num="-28.07">-28.07</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="111">111</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S9">*^&lt;S9</td>
+  <td class=wc41D81E5 x:num="75.77">75.77</td>
+  <td class=wc41D81E5 x:num="-212.1">-212.1</td>
+  <td class=wc41D81E5 x:num="53.71">53.71</td>
+  <td class=wc41D81E5 x:num="105.88">105.88</td>
+  <td class=wc41D81E5 x:num="-46.01">-46.01</td>
+  <td class=wc41D81E5 x:num="3.19">3.19</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="112">112</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S10">*^&lt;S10</td>
+  <td class=wc41D81E5 x:num="117.51">117.51</td>
+  <td class=wc41D81E5 x:num="74.08">74.08</td>
+  <td class=wc41D81E5 x:num="-147.46">-147.46</td>
+  <td class=wc41D81E5 x:num="-18.75">-18.75</td>
+  <td class=wc41D81E5 x:num="1.48">1.48</td>
+  <td class=wc41D81E5 x:num="-6.03">-6.03</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="32">32</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S11">*^&lt;S11</td>
+  <td class=wc41D81E5 x:num="55.85">55.85</td>
+  <td class=wc41D81E5 x:num="-49.81">-49.81</td>
+  <td class=wc41D81E5 x:num="-150.11">-150.11</td>
+  <td class=wc41D81E5 x:num="-92.66">-92.66</td>
+  <td class=wc41D81E5 x:num="-1.79">-1.79</td>
+  <td class=wc41D81E5 x:num="-7.98">-7.98</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="30">30</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S12">*^&lt;S12</td>
+  <td class=wc41D81E5 x:num="-40.53">-40.53</td>
+  <td class=wc41D81E5 x:num="-86.38">-86.38</td>
+  <td class=wc41D81E5 x:num="-158.86">-158.86</td>
+  <td class=wc41D81E5 x:num="-76.25">-76.25</td>
+  <td class=wc41D81E5 x:num="-12.15">-12.15</td>
+  <td class=wc41D81E5 x:num="19.14">19.14</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="29">29</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S13">*^&lt;S13</td>
+  <td class=wc41D81E5 x:num="-27.09">-27.09</td>
+  <td class=wc41D81E5 x:num="-2.62">-2.62</td>
+  <td class=wc41D81E5 x:num="-83.24">-83.24</td>
+  <td class=wc41D81E5 x:num="-61.45">-61.45</td>
+  <td class=wc41D81E5 x:num="-2.58">-2.58</td>
+  <td class=wc41D81E5 x:num="7.08">7.08</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="31">31</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S14">*^&lt;S14</td>
+  <td class=wc41D81E5 x:num="70.14">70.14</td>
+  <td class=wc41D81E5 x:num="-224.82">-224.82</td>
+  <td class=wc41D81E5 x:num="-149.83">-149.83</td>
+  <td class=wc41D81E5 x:num="62.09">62.09</td>
+  <td class=wc41D81E5 x:num="-25.8">-25.8</td>
+  <td class=wc41D81E5 x:num="-20.58">-20.58</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="4">4</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S15">*^&lt;S15</td>
+  <td class=wc41D81E5 x:num="76.08">76.08</td>
+  <td class=wc41D81E5 x:num="-191.77">-191.77</td>
+  <td class=wc41D81E5 x:num="-150.53">-150.53</td>
+  <td class=wc41D81E5 x:num="6.23">6.23</td>
+  <td class=wc41D81E5 x:num="-13.09">-13.09</td>
+  <td class=wc41D81E5 x:num="12.68">12.68</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="5">5</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S16">*^&lt;S16</td>
+  <td class=wc41D81E5 x:num="76.66">76.66</td>
+  <td class=wc41D81E5 x:num="-146.81">-146.81</td>
+  <td class=wc41D81E5 x:num="-190.99">-190.99</td>
+  <td class=wc41D81E5 x:num="37.21">37.21</td>
+  <td class=wc41D81E5 x:num="17.94">17.94</td>
+  <td class=wc41D81E5 x:num="8.62">8.62</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="6">6</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S17">*^&lt;S17</td>
+  <td class=wc41D81E5 x:num="238.33">238.33</td>
+  <td class=wc41D81E5 x:num="-31.44">-31.44</td>
+  <td class=wc41D81E5 x:num="-127.51">-127.51</td>
+  <td class=wc41D81E5 x:num="85.31">85.31</td>
+  <td class=wc41D81E5 x:num="-34.95">-34.95</td>
+  <td class=wc41D81E5 x:num="9.15">9.15</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="7">7</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S18">*^&lt;S18</td>
+  <td class=wc41D81E5 x:num="216.7">216.7</td>
+  <td class=wc41D81E5 x:num="-4.54">-4.54</td>
+  <td class=wc41D81E5 x:num="-132.74">-132.74</td>
+  <td class=wc41D81E5 x:num="12.38">12.38</td>
+  <td class=wc41D81E5 x:num="-28.66">-28.66</td>
+  <td class=wc41D81E5 x:num="9.86">9.86</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="8">8</td>
+  <td class=wc05C81E5 x:num="16">16</td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S19">*^&lt;S19</td>
+  <td class=wc41D81E5 x:num="208.77">208.77</td>
+  <td class=wc41D81E5 x:num="27.35">27.35</td>
+  <td class=wc41D81E5 x:num="-123.77">-123.77</td>
+  <td class=wc41D81E5 x:num="25.46">25.46</td>
+  <td class=wc41D81E5 x:num="-22.29">-22.29</td>
+  <td class=wc41D81E5 x:num="13.75">13.75</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="9">9</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S20">*^&lt;S20</td>
+  <td class=wc41D81E5 x:num="-183.67">-183.67</td>
+  <td class=wc41D81E5 x:num="48.72">48.72</td>
+  <td class=wc41D81E5 x:num="-265.25">-265.25</td>
+  <td class=wc41D81E5 x:num="-39.49">-39.49</td>
+  <td class=wc41D81E5 x:num="22.08">22.08</td>
+  <td class=wc41D81E5 x:num="-29.72">-29.72</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="13">13</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S21">*^&lt;S21</td>
+  <td class=wc41D81E5 x:num="-169.91">-169.91</td>
+  <td class=wc41D81E5 x:num="28.97">28.97</td>
+  <td class=wc41D81E5 x:num="-261.47">-261.47</td>
+  <td class=wc41D81E5 x:num="55.1">55.1</td>
+  <td class=wc41D81E5 x:num="26.44">26.44</td>
+  <td class=wc41D81E5 x:num="-64.99">-64.99</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="14">14</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S22">*^&lt;S22</td>
+  <td class=wc41D81E5 x:num="-157.8">-157.8</td>
+  <td class=wc41D81E5 x:num="11.3">11.3</td>
+  <td class=wc41D81E5 x:num="-239.41">-239.41</td>
+  <td class=wc41D81E5 x:num="-46.93">-46.93</td>
+  <td class=wc41D81E5 x:num="21.62">21.62</td>
+  <td class=wc41D81E5 x:num="-66.41">-66.41</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="15">15</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S23">*^&lt;S23</td>
+  <td class=wc41D81E5 x:num="67.16">67.16</td>
+  <td class=wc41D81E5 x:num="-219.92">-219.92</td>
+  <td class=wc41D81E5 x:num="-302.11">-302.11</td>
+  <td class=wc41D81E5 x:num="61.3">61.3</td>
+  <td class=wc41D81E5 x:num="-18.25">-18.25</td>
+  <td class=wc41D81E5 x:num="-3.52">-3.52</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="16">16</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S24">*^&lt;S24</td>
+  <td class=wc41D81E5 x:num="53.41">53.41</td>
+  <td class=wc41D81E5 x:num="-208.55">-208.55</td>
+  <td class=wc41D81E5 x:num="-273.4">-273.4</td>
+  <td class=wc41D81E5 x:num="27.69">27.69</td>
+  <td class=wc41D81E5 x:num="-4.13">-4.13</td>
+  <td class=wc41D81E5 x:num="38.74">38.74</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="17">17</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S25">*^&lt;S25</td>
+  <td class=wc41D81E5 x:num="48.41">48.41</td>
+  <td class=wc41D81E5 x:num="-179.83">-179.83</td>
+  <td class=wc41D81E5 x:num="-248.37">-248.37</td>
+  <td class=wc41D81E5 x:num="47.35">47.35</td>
+  <td class=wc41D81E5 x:num="-10.16">-10.16</td>
+  <td class=wc41D81E5 x:num="53.29">53.29</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="18">18</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S26">*^&lt;S26</td>
+  <td class=wc41D81E5 x:num="248.64">248.64</td>
+  <td class=wc41D81E5 x:num="1.1">1.1</td>
+  <td class=wc41D81E5 x:num="-301.53">-301.53</td>
+  <td class=wc41D81E5 x:num="96.66">96.66</td>
+  <td class=wc41D81E5 x:num="7.09">7.09</td>
+  <td class=wc41D81E5 x:num="-21.65">-21.65</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="19">19</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S27">*^&lt;S27</td>
+  <td class=wc41D81E5 x:num="229.51">229.51</td>
+  <td class=wc41D81E5 x:num="9.09">9.09</td>
+  <td class=wc41D81E5 x:num="-281.71">-281.71</td>
+  <td class=wc41D81E5 x:num="60.22">60.22</td>
+  <td class=wc41D81E5 x:num="37.81">37.81</td>
+  <td class=wc41D81E5 x:num="28.51">28.51</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="20">20</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S28">*^&lt;S28</td>
+  <td class=wc41D81E5 x:num="217.99">217.99</td>
+  <td class=wc41D81E5 x:num="32.76">32.76</td>
+  <td class=wc41D81E5 x:num="-251.13">-251.13</td>
+  <td class=wc41D81E5 x:num="87.09">87.09</td>
+  <td class=wc41D81E5 x:num="10.65">10.65</td>
+  <td class=wc41D81E5 x:num="50.39">50.39</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="21">21</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S29">*^&lt;S29</td>
+  <td class=wc41D81E5 x:num="93.07">93.07</td>
+  <td class=wc41D81E5 x:num="141.38">141.38</td>
+  <td class=wc41D81E5 x:num="-311">-311</td>
+  <td class=wc41D81E5 x:num="-103.6">-103.6</td>
+  <td class=wc41D81E5 x:num="4.04">4.04</td>
+  <td class=wc41D81E5 x:num="-75.38">-75.38</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="22">22</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S30">*^&lt;S30</td>
+  <td class=wc41D81E5 x:num="94.18">94.18</td>
+  <td class=wc41D81E5 x:num="118.69">118.69</td>
+  <td class=wc41D81E5 x:num="-279.89">-279.89</td>
+  <td class=wc41D81E5 x:num="-95.9">-95.9</td>
+  <td class=wc41D81E5 x:num="1.9">1.9</td>
+  <td class=wc41D81E5 x:num="-89.9">-89.9</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="23">23</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S31">*^&lt;S31</td>
+  <td class=wc41D81E5 x:num="99.21">99.21</td>
+  <td class=wc41D81E5 x:num="104.96">104.96</td>
+  <td class=wc41D81E5 x:num="-239.65">-239.65</td>
+  <td class=wc41D81E5 x:num="-96.93">-96.93</td>
+  <td class=wc41D81E5 x:num="32">32</td>
+  <td class=wc41D81E5 x:num="-3.63">-3.63</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="24">24</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S32">*^&lt;S32</td>
+  <td class=wc41D81E5 x:num="-46.53">-46.53</td>
+  <td class=wc41D81E5 x:num="-18.09">-18.09</td>
+  <td class=wc41D81E5 x:num="-265.7">-265.7</td>
+  <td class=wc41D81E5 x:num="52.35">52.35</td>
+  <td class=wc41D81E5 x:num="6.85">6.85</td>
+  <td class=wc41D81E5 x:num="5.86">5.86</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="28">28</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S33">*^&lt;S33</td>
+  <td class=wc41D81E5 x:num="11.54">11.54</td>
+  <td class=wc41D81E5 x:num="-116.62">-116.62</td>
+  <td class=wc41D81E5 x:num="-287.73">-287.73</td>
+  <td class=wc41D81E5 x:num="-78.83">-78.83</td>
+  <td class=wc41D81E5 x:num="32.49">32.49</td>
+  <td class=wc41D81E5 x:num="67.95">67.95</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="27">27</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S34">*^&lt;S34</td>
+  <td class=wc41D81E5 x:num="-22.27">-22.27</td>
+  <td class=wc41D81E5 x:num="-64.54">-64.54</td>
+  <td class=wc41D81E5 x:num="-347.43">-347.43</td>
+  <td class=wc41D81E5 x:num="-123.15">-123.15</td>
+  <td class=wc41D81E5 x:num="49.15">49.15</td>
+  <td class=wc41D81E5 x:num="35.21">35.21</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="25">25</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S35">*^&lt;S35</td>
+  <td class=wc41D81E5 x:num="26.39">26.39</td>
+  <td class=wc41D81E5 x:num="-56.61">-56.61</td>
+  <td class=wc41D81E5 x:num="-332">-332</td>
+  <td class=wc41D81E5 x:num="-22.81">-22.81</td>
+  <td class=wc41D81E5 x:num="47.63">47.63</td>
+  <td class=wc41D81E5 x:num="75.06">75.06</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="26">26</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S36">*^&lt;S36</td>
+  <td class=wc41D81E5 x:num="-158.83">-158.83</td>
+  <td class=wc41D81E5 x:num="-113.65">-113.65</td>
+  <td class=wc41D81E5 x:num="-161.57">-161.57</td>
+  <td class=wc41D81E5 x:num="26.69">26.69</td>
+  <td class=wc41D81E5 x:num="21.17">21.17</td>
+  <td class=wc41D81E5 x:num="-93.87">-93.87</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="45">45</td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S37">*^&lt;S37</td>
+  <td class=wc41D81E5 x:num="2.56">2.56</td>
+  <td class=wc41D81E5 x:num="-226.6">-226.6</td>
+  <td class=wc41D81E5 x:num="-224.59">-224.59</td>
+  <td class=wc41D81E5 x:num="-15.81">-15.81</td>
+  <td class=wc41D81E5 x:num="78.58">78.58</td>
+  <td class=wc41D81E5 x:num="-82.38">-82.38</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="20">20</td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S38">*^&lt;S38</td>
+  <td class=wc41D81E5 x:num="131.98">131.98</td>
+  <td class=wc41D81E5 x:num="-139.75">-139.75</td>
+  <td class=wc41D81E5 x:num="-154.04">-154.04</td>
+  <td class=wc41D81E5 x:num="133.51">133.51</td>
+  <td class=wc41D81E5 x:num="34.65">34.65</td>
+  <td class=wc41D81E5 x:num="-31.93">-31.93</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="23">23</td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S39">*^&lt;S39</td>
+  <td class=wc41D81E5 x:num="88.62">88.62</td>
+  <td class=wc41D81E5 x:num="-181.55">-181.55</td>
+  <td class=wc41D81E5 x:num="-159.73">-159.73</td>
+  <td class=wc41D81E5 x:num="-174.2">-174.2</td>
+  <td class=wc41D81E5 x:num="37">37</td>
+  <td class=wc41D81E5 x:num="13.06">13.06</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="24">24</td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S40">*^&lt;S40</td>
+  <td class=wc41D81E5 x:num="83.54">83.54</td>
+  <td class=wc41D81E5 x:num="-151.57">-151.57</td>
+  <td class=wc41D81E5 x:num="-184.85">-184.85</td>
+  <td class=wc41D81E5 x:num="147.93">147.93</td>
+  <td class=wc41D81E5 x:num="-6.3">-6.3</td>
+  <td class=wc41D81E5 x:num="-106">-106</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="27">27</td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S41">*^&lt;S41</td>
+  <td class=wc41D81E5 x:num="37.88">37.88</td>
+  <td class=wc41D81E5 x:num="199.96">199.96</td>
+  <td class=wc41D81E5 x:num="-217.14">-217.14</td>
+  <td class=wc41D81E5 x:num="-110.06">-110.06</td>
+  <td class=wc41D81E5 x:num="52.65">52.65</td>
+  <td class=wc41D81E5 x:num="-15.87">-15.87</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="39">39</td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S42">*^&lt;S42</td>
+  <td class=wc41D81E5 x:num="-7.56">-7.56</td>
+  <td class=wc41D81E5 x:num="188.88">188.88</td>
+  <td class=wc41D81E5 x:num="-193.8">-193.8</td>
+  <td class=wc41D81E5 x:num="-76.12">-76.12</td>
+  <td class=wc41D81E5 x:num="26.58">26.58</td>
+  <td class=wc41D81E5 x:num="-60.51">-60.51</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="32">32</td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S43">*^&lt;S43</td>
+  <td class=wc41D81E5 x:num="218.81">218.81</td>
+  <td class=wc41D81E5 x:num="53.23">53.23</td>
+  <td class=wc41D81E5 x:num="-147.55">-147.55</td>
+  <td class=wc41D81E5 x:num="-118.86">-118.86</td>
+  <td class=wc41D81E5 x:num="21.09">21.09</td>
+  <td class=wc41D81E5 x:num="-31.49">-31.49</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="15">15</td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S44">*^&lt;S44</td>
+  <td class=wc41D81E5 x:num="234.64">234.64</td>
+  <td class=wc41D81E5 x:num="40.89">40.89</td>
+  <td class=wc41D81E5 x:num="-182.84">-182.84</td>
+  <td class=wc41D81E5 x:num="-131.28">-131.28</td>
+  <td class=wc41D81E5 x:num="42.41">42.41</td>
+  <td class=wc41D81E5 x:num="-23.26">-23.26</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="17">17</td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S45">*^&lt;S45</td>
+  <td class=wc41D81E5 x:num="83.84">83.84</td>
+  <td class=wc41D81E5 x:num="185.97">185.97</td>
+  <td class=wc41D81E5 x:num="-151.76">-151.76</td>
+  <td class=wc41D81E5 x:num="-106.02">-106.02</td>
+  <td class=wc41D81E5 x:num="-15.39">-15.39</td>
+  <td class=wc41D81E5 x:num="7.12">7.12</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="10">10</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S46">*^&lt;S46</td>
+  <td class=wc41D81E5 x:num="73.69">73.69</td>
+  <td class=wc41D81E5 x:num="163.27">163.27</td>
+  <td class=wc41D81E5 x:num="-149.35">-149.35</td>
+  <td class=wc41D81E5 x:num="-48.95">-48.95</td>
+  <td class=wc41D81E5 x:num="-55.5">-55.5</td>
+  <td class=wc41D81E5 x:num="-15.03">-15.03</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="11">11</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S47">*^&lt;S47</td>
+  <td class=wc41D81E5 x:num="65.7">65.7</td>
+  <td class=wc41D81E5 x:num="123.31">123.31</td>
+  <td class=wc41D81E5 x:num="-164.55">-164.55</td>
+  <td class=wc41D81E5 x:num="-27.61">-27.61</td>
+  <td class=wc41D81E5 x:num="12.99">12.99</td>
+  <td class=wc41D81E5 x:num="-19.37">-19.37</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="12">12</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S48">*^&lt;S48</td>
+  <td class=wc41D81E5 x:num="92.52">92.52</td>
+  <td class=wc41D81E5 x:num="142.58">142.58</td>
+  <td class=wc41D81E5 x:num="-310.06">-310.06</td>
+  <td class=wc41D81E5 x:num="-103.69">-103.69</td>
+  <td class=wc41D81E5 x:num="28.66">28.66</td>
+  <td class=wc41D81E5 x:num="-8.05">-8.05</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="22">22</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wc41D81E5 x:str="'*^&lt;S49">*^&lt;S49</td>
+  <td class=wc41D81E5 x:num="93.66">93.66</td>
+  <td class=wc41D81E5 x:num="119.82">119.82</td>
+  <td class=wc41D81E5 x:num="-280.17">-280.17</td>
+  <td class=wc41D81E5 x:num="-101.83">-101.83</td>
+  <td class=wc41D81E5 x:num="15.06">15.06</td>
+  <td class=wc41D81E5 x:num="-23.92">-23.92</td>
+  <td class=wc05C81E5></td>
+  <td class=wc05C81E5 x:num="23">23</td>
+  <td class=wc05C81E5></td>
+ </tr>
+ <tr height="17">
+  <td class=wcC3281E5 x:str="'*^&lt;S50">*^&lt;S50</td>
+  <td class=wcC3281E5 x:num="98.59">98.59</td>
+  <td class=wcC3281E5 x:num="104.19">104.19</td>
+  <td class=wcC3281E5 x:num="-239.59">-239.59</td>
+  <td class=wcC3281E5 x:num="-87.51">-87.51</td>
+  <td class=wcC3281E5 x:num="32.02">32.02</td>
+  <td class=wcC3281E5 x:num="23.89">23.89</td>
+  <td class=wcC3D71E5></td>
+  <td class=wcC3D71E5 x:num="24">24</td>
+  <td class=wcC3D71E5></td>
+ </tr>
+</table>
+
+</body>
+
+</html>
