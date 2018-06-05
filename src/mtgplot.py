@@ -46,6 +46,35 @@ class ClassColoring:
         if typechange  and gcon:
             turtle.startGC()
 
+
+def leafsmb():
+
+    leafdiam = QuantisedFunction(NurbsCurve2D(Point3Array([Vector3(0,0.0,1),Vector3(0.239002,1.00091,1),Vector3(0.485529,0.991241,1),Vector3(0.718616,1.00718,1),Vector3(0.877539,0.231273,1),Vector3(1,0.0,1)])))
+    leafpath = NurbsCurve2D(Point3Array([(-0.5, 0, 1),(-0.145022, -0.0735931, 1),(0.0844156, -0.212121, 1),(0.123377, -0.497835, 1)]))    
+    leafsection = NurbsCurve2D(Point3Array([Vector3(-0.508209,0.16873,1),Vector3(-0.515031,0.138195,1),Vector3(-0.198373,-0.0924227,1),Vector3(-0.00298323,0.188761,1),Vector3(0.0897461,-0.106293,1),Vector3(0.555704,0.0979703,1),Vector3(0.545047,0.12817,1)]))
+    leafsection.stride = 2
+    length = 1
+
+    turtle = PglTurtle()
+    turtle.push()
+    turtle.down(60)
+    turtle.startGC().sweep(leafpath,leafsection,length,length/5.,length*0.24,leafdiam).stopGC()
+    turtle.pop()
+
+    leafsmb = turtle.getScene()[0].geometry
+
+    t = Tesselator()
+    leafsmb.apply(t)
+    leafsmb = t.result
+
+    surfs = surfaces(leafsmb.indexList, leafsmb.pointList)
+    toremove = [i for i,s in enumerate(surfs) if s < 1e-5]
+    leafsmb.indexList = leafsmb.indexList.opposite_subset(toremove)
+    assert leafsmb.isValid()
+
+    leafsmb.name = 'leaf'
+    return leafsmb
+
 def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True, todate = None, display = True):
     posproperty = pos_prop(mtg)
     orientations = orientation_prop(mtg)
@@ -79,10 +108,6 @@ def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True
     #pf.points = dict([(node,Vector3(pos)-pf.origin) for node,pos in pf.points.items()])
     pf.points = dict([(node,Vector3(pos)) for node,pos in pf.points.items()])
 
-    leafdiam = QuantisedFunction(NurbsCurve2D(Point3Array([Vector3(0,0.0846264,1),Vector3(0.239002,1.00091,1),Vector3(0.485529,0.991241,1),Vector3(0.718616,1.00718,1),Vector3(0.877539,0.231273,1),Vector3(1,0.00332359,1)])))
-    leafpath = NurbsCurve2D(Point3Array([(-0.5, 0, 1),(-0.145022, -0.0735931, 1),(0.0844156, -0.212121, 1),(0.123377, -0.497835, 1)]))    
-    leafsection = NurbsCurve2D(Point3Array([Vector3(-0.508209,0.16873,1),Vector3(-0.515031,0.138195,1),Vector3(-0.198373,-0.0924227,1),Vector3(-0.00298323,0.188761,1),Vector3(0.0897461,-0.106293,1),Vector3(0.555704,0.0979703,1),Vector3(0.545047,0.12817,1)]))
-    leafsection.stride = 6
 
     colorizer = colorizer(mtg)
 
@@ -113,12 +138,6 @@ def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True
         import pandas as pd
         todate = pd.Timestamp(todate)
 
-    def leaf(turtle, length):
-        turtle.push()
-        turtle.down(60)
-        # turtle.setColor(2)
-        turtle.startGC().sweep(leafpath,leafsection,length,length/5.,length*0.24,leafdiam).stopGC()
-        turtle.pop()
 
     def plantframe_visitor(g, v, turtle):
         if todraw and not v in todraw: return
@@ -145,15 +164,18 @@ def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True
                     if not leaves or nbleaf == 0:
                         turtle.lineTo(pt, radius)
                     else:
+                        turtle.push()
+                        turtle.lineTo(pt, radius)
+                        turtle.pop()
                         turtle.pinpoint(pt)
                         parent = mtg.parent(v)
                         parentpos = pf.points[parent]
                         length = norm(pt-parentpos)
                         seglength = length/nbleaf
-                        parentradius = diameters.get(parent)
-                        segdiaminc = (radius-parentradius)/nbleaf
+                        #parentradius = diameters.get(parent)
+                        #segdiaminc = (radius-parentradius)/nbleaf
                         for i in xrange(nbleaf):
-                            turtle.F(seglength,parentradius+segdiaminc*(i+1))
+                            turtle.f(seglength) #,parentradius+segdiaminc*(i+1))
                             turtle.rollR(144)
                             turtle.surface('leaf', gauss(*leaf_length_distrib[mtg.edge_type(mtg.parent(v))]))
                             #leaf(turtle, gauss(*leaf_length_distrib[mtg.edge_type(mtg.parent(v))]) )
@@ -177,13 +199,9 @@ def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True
                         if gc : turtle.startGC()
 
 
-    turtle = PglTurtle()
-    leaf(turtle, 1)
-    leafsmb = turtle.getScene()[0].geometry
-    leafsmb.name = 'leaf'
 
     turtle = PglTurtle()
-    turtle.setSurface('leaf', leafsmb)
+    turtle.setSurface('leaf', leafsmb())
     turtle.setColorAt(7,(30,22,7))
     turtle.setColorAt(1,(65,45,15))
     #turtle.sectionResolution = 6
@@ -199,225 +217,29 @@ def retrievedates(mtg):
     dates = np.unique([pd.Timestamp(d.year,d.month,d.day,23,59) for d in dates])
     return dates
 
-def treecentroid(mtg, date = None):
-    from openalea.plantgl.all import Vector3, Point3Array
-    xx = mtg.property('XX')
-    yy = mtg.property('YY')
-    zz = mtg.property('ZZ')
-    if date:
-        date = date.to_pydatetime().date()
-        centroid = Point3Array([(xx[vid],-yy[vid],-zz[vid]) for vid in mtg.vertices(scale=3) if mtg.property('DigitDate')[vid].to_pydatetime().date() == date]).getCenter()
-    else:
-        centroid = Point3Array([(xx[vid],-yy[vid],-zz[vid]) for vid in mtg.vertices(scale=3)]).getCenter()
+from openalea.plantgl.all import *
 
-    return centroid
-
-def camerapositions(mtg, dist = 1200):
-    centroid = treecentroid(mtg)
-    result = []
-    for d in retrievedates(mtg):
-        dcentroid = treecentroid(mtg,d)
-        dcentroid.z = centroid.z
-        dir = direction(dcentroid-centroid)
-        camposition = centroid + dir*dist
-        result.append((d,camposition))
-    tomerge = []
-    for i in xrange(len(result)-1):
-        j = i+1
-        ok = True
-        while angle(result[i][1], result[j][1],(0,0,1)) < 0:
-            ok = False
-            j = j+1
-        if ok is False:
-            tomerge.append(range(i,j))
-            i = j
-    for atm in tomerge:
-        npos = Point3Array([result[did][1] for did in atm]).getCenter()
-        for did in atm: 
-            result[did] = (result[did][0],npos)
-    return dict(result), centroid
+def discretization_test(sc, minsurface = 1e-4):
+    t = Tesselator()
+    minmin = None
+    for sh in sc:
+        sh.apply(t)
+        triangleset = t.result
+        sfs = surfaces(triangleset.indexList, triangleset.pointList)
+        nmin = sfs.getMin()
+        if nmin < minsurface:
+            print '!!!',sh.id
+        print sh.id, nmin
+        if minmin is None or nmin < minmin:
+            minmin = nmin
 
 
-def cameraangles(mtg, dist = 1200):
-    cc, pos = camerapositions(mtg, dist)
-    cc = cc.items()
-    cc.sort()
-    ref = Vector3(cc[0][1])-pos
-    cc2 = [(d,angle(ref,Vector3(cci)-pos,(0,0,1))) for d,cci in cc]
-    return dict(cc2),pos,Vector3(cc[0][1])
-
-def interpolatecamerapositions(mtg, dist = 1200, nbposition = 25):
-    cc, pos = camerapositions(mtg, dist)
-    cc = cc.items()
-    cc.sort()
-    ref = Vector3(cc[0][1])-pos
-    res = []
-    for i in xrange(len(cc)):
-        d,cci = cc[i]
-        d,ccj = cc[(i+1)%len(cc)]
-        for x in xrange(nbposition):
-            ccd = (cci*(nbposition-x) + ccj*x)/nbposition
-            ccd = pos + direction(ccd-pos)*dist
-            res.append(ccd)
-    res.append(cc[0][1])
-    return res, pos
-
-def bezinterpolatecamerapositions(mtg, dist = 1200, nbposition = 25):
-    res, pos = interpolatecamerapositions(mtg, dist = dist, nbposition = 4)
-    nbc = NurbsCurve(Point4Array(res,1))
-    nbc.stride = ((len(res)-1)*nbposition/4)-1
-    d = Discretizer()
-    nbc.apply(d)
-    return d.result.pointList, pos
-
-def plot_camerapositions(mtg, dist = 1200, interpolation = True):
-    if interpolation:
-        cc1, pos = bezinterpolatecamerapositions(mtg, dist)
-    else:
-        cc, pos = camerapositions(mtg, dist)
-        cc = cc.items()
-        cc.sort()
-        cc1 = [b for a,b in cc]
-    Viewer.add(Polyline(cc1))
-
-def timeplot(mtg, colorizer = ClassColoring, leaves = False, gc = True):
-    from random import seed
-    from openalea.plantgl.all import Viewer
-    campos, centroid = camerapositions(mtg)
-    for d in retrievedates(mtg):
-        seed(0)
-        Viewer.redrawPolicy = False
-        sc = plot(mtg, colorizer=colorizer, leaves=leaves, gc=gc, todate = d)
-        Viewer.redrawPolicy = True
-        Viewer.camera.lookAt(campos[d], centroid)
-
-
-header = '''
-/*
- * A povray file generated with GEOM.
- * Example of use : povray -Ifile.pov -Ofile.png +FN +H600 +W800 +A.
- * File Generated with PlantGL 3D Viewer.
- */
-
-
-#ifndef (__camera_definition__)
-#declare __camera_definition__ = true;
-
-#declare Location = %s;
-#declare Right = %s;
-#declare NRight = %s;
-#declare LookAt = %s;
-#declare RotAngle = %f;
-#declare Direction = %s;
-#declare Date = "%s";
-
-camera {
-   perspective
-    location Location
-    sky <0,0,1>
-    right Right
-    look_at LookAt
-}
-
-light_source {
-     <27,16,800>
-    color rgb 0.9
-}
-
-
-
-background { color rgb <1,1,1> }
-
-plane { <0,0,1> 0 
-        clipped_by { plane {<-1,0,0> 1500     rotate <0,0,RotAngle> } }
-        texture {
-            pigment {
-               color rgb 1
-            }
-            finish {
-              ambient 0.4
-              diffuse 1
-              specular 0
-            }
-
-       }
-}
-
-
-#end // __camera_definition__
-
-'''
-datedef = '''
-
-object {
-    text {
-    ttf "crystal.ttf" Date 0.01, 0
-    pigment { color rgb <0,0,0> }
-
-    }
-    rotate <90,0,89+RotAngle>
-    translate Location+(Direction*10)+<0,0,-4>+(NRight*-3)
-}
-
-'''
-
-def generate(mtg, colorizer = ClassColoring, leaves = False, gc = True, nbsteps = 1, withdate = False):
-    import numpy as np
-    import pandas as pd
-    from math import degrees
-    import os
-    if not os.path.exists('reconstructionmovie'):
-        os.makedirs('reconstructionmovie')
-    os.chdir('reconstructionmovie')
-    from random import seed
-    dates = np.unique(mtg.property('DigitDate').values())
-    dates.sort()
-    dates = np.unique([pd.Timestamp(d.year,d.month,d.day,23,59) for d in dates])
-    for d in dates:
-        fname = 'mangodigit'+str(d.year)+'-'+str(d.month)+'-'+str(d.day).zfill(2)
-        if leaves: fname += '_leafy'
-        fname +='.pov'
-        if not os.path.exists(fname):
-            seed(0)
-            sc = plot(mtg, colorizer=colorizer, leaves=leaves, gc=gc, todate = d, display = False)
-            sc.save(fname)
-    campos, cpos = bezinterpolatecamerapositions(mtg, dist = 800, nbposition=nbsteps)
-    #print len(campos), len(dates)*nbsteps
-    assert len(campos) == len(dates)*nbsteps
-    v3tostr = lambda v : '<'+str(v.x)+','+str(v.y)+','+str(v.z)+'>'
-    for i,cam in enumerate(campos):
-        povstream = file('view_'+str(i).zfill(4)+'.pov','w')
-        right = direction(cross(direction(cam-cpos),(0,0,1)))*16/9.
-        angleSoil = degrees(angle((1,0,0),direction(cam-cpos),(0,0,1)))
-        angleRight = degrees(angle((1,0,0),direction(right),(0,0,1)))
-        nright = right
-        if np.sign(angleSoil) == np.sign(angleRight) == -1 or angleSoil-angleRight < 0:
-            print 'not change',i
-        else:
-            right *= -1
-        #print i, cam, right, angleSoil, angleRight, angleSoil-angleRight
-        d = dates[i // nbsteps]
-        povstream.write(header % (v3tostr(cam),v3tostr(right),v3tostr(nright),v3tostr(cpos), angleSoil, v3tostr(direction(cpos-cam)), str(d.day).zfill(2)+'/'+str(d.month).zfill(2)))
-        if withdate : povstream.write(datedef)
-        povstream.write('#include "mangodigit'+str(d.year)+'-'+str(d.month)+'-'+str(d.day).zfill(2)+('_leafy' if leaves else '')+'.pov"\n\n\n')
-        povstream.close()
-    povstream = file('mangoreconstruction.pov','w')
-    for i in xrange(len(campos)):
-        povstream.write('#if (clock = %i)\n #include "view_%s.pov"\n#end\n' % (i,str(i).zfill(4)))
-    povstream.close()
-    cmd = "povray -Imangoreconstruction.pov +H720 +W1280 +FN +A +KFI0 +KI0 +KFF"+str(len(campos)-1)+" +KF"+str(len(campos)-1)+" +L/opt/local/share/povray-3.7/include/ -GA"
-    from time import time
-    t = time()
-    os.system(cmd)
-    print 'Done in',time()-t, 'sec.'
-
-    #for i in xrange(len(campos)):
-    #    cmd = "povray -Iview_"+str(i).zfill(4)+".pov +H720 +W1280 +FN +A -GA"
-    #    print cmd
-    #    os.system(cmd)
-    os.chdir(os.pardir)
+def triangles(sh):
+    t = Tesselator()
+    sh.apply(t)
+    return Shape(t.result,sh.appearance,sh.id)
 
 
 if __name__ == '__main__':
     g = MTG('../data/consolidated_mango3d.mtg')
-    plot(g, leaves = True, gc = False)
+    sc = plot(g, leaves = True, gc = False, display = True)
