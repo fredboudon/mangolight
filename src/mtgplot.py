@@ -75,6 +75,8 @@ def leafsmb():
     leafsmb.name = 'leaf'
     return leafsmb
 
+woodidshift = 100000
+
 def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True, todate = None, display = True):
     posproperty = pos_prop(mtg)
     orientations = orientation_prop(mtg)
@@ -149,7 +151,7 @@ def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True
 
         unittype = g.property('UnitType').get(vid,'B')
         if pt:
-            turtle.setId(v)
+            turtle.setId(woodidshift+v)
             if 'M' in unittype:
                 pass
             elif 'C' in unittype:
@@ -177,7 +179,9 @@ def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True
                         for i in xrange(nbleaf):
                             turtle.f(seglength) #,parentradius+segdiaminc*(i+1))
                             turtle.rollR(144)
+                            turtle.setId(v)
                             turtle.surface('leaf', gauss(*leaf_length_distrib[mtg.edge_type(mtg.parent(v))]))
+                            turtle.setId(woodidshift+v)
                             #leaf(turtle, gauss(*leaf_length_distrib[mtg.edge_type(mtg.parent(v))]) )
 
                 else:

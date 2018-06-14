@@ -38,7 +38,7 @@ def histodays(dayset):
     plt.show()
 
 
-def read_data(timezone = 'Indian/Reunion'):
+def read_sensor_data(timezone = 'Indian/Reunion'):
     from pandas import DataFrame, DatetimeIndex
     import os
     import datetime
@@ -66,41 +66,51 @@ def read_data(timezone = 'Indian/Reunion'):
             #    continue
             data.append([date]+map(float,info[5:]))
     data.sort(key = lambda v : v[0])
-    data = DataFrame(data,columns=['date']+['sensor_'+str(i) for i in xrange(1,33)])
+
+    sensororder = get_sensors_order()
+
+    data = DataFrame(data,columns=['date']+['sensor_'+str(i) for i in sensororder])
     index = DatetimeIndex(data['date'])
     if timezone:
         index = index.tz_localize(timezone)
     data = data.set_index(index)
     return data
 
-def convert_data(df):
+def convert_sensor_data(df):
     from pandas import DataFrame, to_datetime, DatetimeIndex
     from datetime import timedelta
     idx = df.index-timedelta(minutes=1)
     timeid = DatetimeIndex(to_datetime(DataFrame({'year' : idx.year, 'month' : idx.month, 'day' : idx.day, 'hour' : idx.hour+1})))
     timeid = timeid.tz_localize(idx.tzinfo)
-    mumol_m2_s_to_wat_m2 = (1200 / 60) / (4.6*0.48)
+    ### measure in mVolt. 60 mV -> 1200 mumol/m2/s 
+    ### 4.6 mumol/m2/s -> Watt/m2 
+    mumol_m2_s_to_wat_m2 = (1200 / 60) / 4.6
     ndf = df.groupby(timeid).mean() * mumol_m2_s_to_wat_m2
     return ndf
 
-def filter_data(data, toremove = [8,9]):
+def filter_sensor_data(data, toremove = [8,9,28,29]):
     for v in toremove:
         del data['sensor_'+str(int(v))]
     return data
 
-def get_data():
-    return filter_data(convert_data(read_data()))
+SENSORDATA = None
+
+def get_sensor_data():
+    global SENSORDATA
+    if SENSORDATA is None:
+        SENSORDATA = filter_sensor_data(convert_sensor_data(read_sensor_data()))
+    return SENSORDATA
 
 
-def get_meteo(data_file='../data/MeteoBassinPlat2017.csv', localisation = 'Indian/Reunion'):
+def read_meteo(data_file='../data/MeteoBassinPlat2017.csv', localisation = 'Indian/Reunion'):
     """ reader for mango meteo files """
     import pandas
     data = pandas.read_csv(data_file, parse_dates=['DATES'],
                                delimiter = ';',
-                               usecols=['DATES','T107_C_3_Avg','Slr_MJ_Tot','RH'], dayfirst=True)
+                               usecols=['DATES','T107_C_3_Avg','Slr_kW_Avg','RH'], dayfirst=True)
 
     data = data.rename(columns={'DATES':'date',
-                                 'Slr_MJ_Tot':'global_radiation',
+                                 'Slr_kW_Avg':'global_radiation',
                                  'T107_C_3_Avg':'temperature_air',
                                  'RH':'relative_humidity'})
     # convert kW.m-2 to W.m-2
@@ -110,19 +120,120 @@ def get_meteo(data_file='../data/MeteoBassinPlat2017.csv', localisation = 'India
     return data
 
 
-def get_sensors_table(data_file = '../data/capteurspositions.csv'):
-    import pandas
-    data = pandas.read_csv(data_file, delimiter = ';')
-    data = data.set_index(data['Id'])
-    return data
+METEO = None
 
-def get_sensors(data_file = '../data/capteurspositions.csv'):
+def get_meteo():
+    global METEO
+    if METEO is None:
+        METEO = read_meteo()
+    return METEO
+
+SENSORS = None
+
+def get_sensors_table(data_file = '../data/capteurspositions.csv'):
+    global SENSORS
+    if SENSORS is None:
+        import pandas
+        SENSORS = pandas.read_csv(data_file, delimiter = ';')
+        SENSORS = SENSORS.set_index(SENSORS['Id'])
+    return SENSORS
+
+def get_sensors():
     from openalea.plantgl.all import Vector3
-    data = get_sensors_table(data_file)
+    data = get_sensors_table()
     results = {}
     for v in data.values:
-        results['sensor_'+str(int(v[0]))] = (Vector3(*v[1:4]),Vector3(*v[4:]))
+        results[int(v[0])] = (Vector3(v[1],-v[2],-v[3]),Vector3(*v[4:7]))
     return results
+
+def get_sensors_order():
+    return get_sensors_table()['Sensor']
+
+
+def view_sensors():
+    import openalea.plantgl.all as pgl
+    sensors = get_sensors()
+    s = pgl.Scene('../data/lightedG3.bgeom')
+    s2 = pgl.Scene([pgl.Shape(pgl.Translated(pos,pgl.Sphere(5)), pgl.Material((255,0,0)), int(sid[7:])) for sid,(pos,nml) in sensors.iteritems() ])
+    pgl.Viewer.display(s+s2)
+
+
+def associate_sensors(sensors, mtg = None, withleaf = True, nbnbg = 10):
+    import mangoG3 as mg3
+    if mtg is None:
+        mtg = mg3.get_G3_mtg()
+
+    pos = mtg.property("Position")
+
+    from scipy.spatial import KDTree
+    points = [[p.x,p.y,p.z] for vid,p in pos.items() if mtg.edge_type(vid) == '<']
+    kdtree = KDTree(points)
+    guidmap = dict(enumerate([vid for vid in pos.keys() if mtg.edge_type(vid) == '<']))
+
+    sensorpos = [p for p,n in sensors.values()]
+    if withleaf:
+        distances, pids = kdtree.query(sensorpos,nbnbg)
+        ndistance, npids = [],[]
+        for sid, ldists, lpids in zip(range(len(pids)),distances, pids):
+            for i,pid in enumerate(lpids):
+                if mg3.get_gu_nb_leaf(mtg, guidmap[pid]) > 0:
+                    ndistance.append(ldists[i])
+                    npids.append(pid)
+                    #print 'find leafy gu for', sid, pid
+                    break
+            else:
+                ndistance.append(ldists[0])
+                npids.append(lpids[0])
+                #print 'find not leafy gu for', sid, lpids[0]
+        distances, pids = ndistance, npids
+    else:
+        distances, pids = kdtree.query(sensorpos)
+
+
+
+
+    gus = [guidmap[pid] for pid in pids]
+
+    def find_closest(point, gu):
+        from openalea.plantgl.all import closestPointToSegment
+        d = closestPointToSegment(point,mg3.get_gu_bottom_position(mtg, gu),mg3.get_gu_top_position(mtg, gu))[1]
+        sgu = gu
+        for cgu in mg3.get_children(mtg,gu):
+            cp, cd, cu = closestPointToSegment(point,mg3.get_gu_bottom_position(mtg, cgu),mg3.get_gu_top_position(mtg, cgu))
+            if cd < d and (not withleaf or mg3.get_gu_nb_leaf(mtg, cgu) > 0):
+                d = cd
+                sgu = cgu
+        return sgu
+
+    gus = dict([( sid , find_closest(p,gu)) for sid, p,gu in zip(sensors.keys(), sensorpos, gus) ])
+    return gus
+
+def view_sensor_association(association = None, sensors = None):
+    import openalea.plantgl.all as pgl
+    from random import randint
+    if sensors is None:
+        sensors = get_sensors()
+    if association is None:
+        association = associate_sensors(sensors)
+    cols = [pgl.Color3.fromHSV((float(randint(0,360)),100,100)) for i in xrange(32)]
+
+    s = pgl.Scene('../data/consolidated_mango3d.bgeom')
+    ns = s.todict()
+    s1 = pgl.Scene()
+    for sid,guid in association.items():
+        mat = pgl.Material(cols[sid-1])
+        for sh in ns[guid]:
+            sh.appearance = mat
+            s1.add(sh)
+    s2 = pgl.Scene([pgl.Shape(pgl.Translated(pos,pgl.Sphere(5)), pgl.Material(cols[sid-1]), sid) for sid,(pos,nml) in sensors.iteritems() ])
+    pgl.Viewer.display(s1+s2)
+
+
+def sensors_associate_to_non_leafy_gus(association):
+    import mangoG3 as mg3
+    mtg = mg3.get_G3_mtg()
+    return [sid for sid, guid in association.items() if mg3.get_gu_nb_leaf(mtg, guid) == 0]
+
 
 
 def plot_data(sensors = None, daterange = None, data = None, meteo = None):
@@ -154,16 +265,46 @@ def plot_data(sensors = None, daterange = None, data = None, meteo = None):
         data = data.loc[dr,:]
 
     data.plot()
+    plt.legend(bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.)
     plt.show()
 
 
-if __name__ == '__main__':
-    #histodays(days())
+
+def read_simulateddata(rep = 'results', localisation = 'Indian/Reunion'):
+    import os
+    import glob
+    #import datetime
+    from pandas import concat, read_csv, DatetimeIndex
+
+    files = glob.glob(os.path.join(rep, 'result*.csv'))
+    print files
+    df = concat([read_csv(f) for f in files])
+    del df[u'Unnamed: 0']
+    df.sort_values(by='date')
+    index = DatetimeIndex(df['date']).tz_localize('UTC').tz_convert(localisation)
+    df = df.set_index(index)
+    return df
+
+SIMDATA = None
+def get_simulateddata():
+    global SIMDATA
+    if SIMDATA is None:
+        SIMDATA = read_simulateddata()
+    return SIMDATA
+
+
+def plotdatamain():
     import sys
     sensors = None
     if len(sys.argv) > 1:
         sensors = []
         for i in range(1,len(sys.argv)):
             sensors.append(eval(sys.argv[i]))
-    plot_data(sensors, daterange=('2017-07-03','2017-07-08'))
-    #df = read_data()
+    plot_data(sensors, daterange=('2017-07-01','2017-07-13'))
+
+if __name__ == '__main__':
+    sensors = get_sensors()
+    association = associate_sensors(sensors)
+    print association
+    print sensors_associate_to_non_leafy_gus(association)
+    view_sensor_association(association, sensors)
