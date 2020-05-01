@@ -51,11 +51,17 @@ def get_gu_top_point(mtg,vid):
 def is_terminal(mtg,vid):
     return mtg.nb_children(vid) == 0
 
+def is_pruned(mtg,vid):
+    return not (mtg.property('Taille').get(vid) is None)
+
 def get_all_gus(mtg):
     return [vid for vid in mtg.vertices(scale=3) if is_gu_point(mtg, vid)]
 
 def get_all_terminal_gus(mtg):
     return [vid for vid in mtg.vertices(scale=3) if is_gu_point(mtg, vid) and is_terminal(mtg,vid)]
+
+def get_all_pruned_gus(mtg):
+    return mtg.property('Taille').keys()
 
 def get_terminal_gus_from_ancestor(mtg, vid):
     return [vid for vid in mtg.Extremities(vid) if is_gu_point(mtg, vid)]
@@ -122,7 +128,7 @@ def set_gu_property(mtg, vid, propname, value, toppoint = True):
 def get_parent(mtg, vid):
     assert not vid is None
     vid = mtg.parent(vid)
-    if not is_gu_point(mtg, vid):
+    while not vid is None and not is_gu_point(mtg, vid):
         vid = mtg.parent(vid)
     assert vid is None or is_gu_point(mtg, vid)
     return vid
@@ -150,12 +156,15 @@ def gu_position(mtg, vid):
     return eApical if mtg.edge_type(get_gu_bottom_point(mtg,vid)) == '<' else eLateral
 
 def nbtotalleaves(mtg):
-    return gu_recursive_property(mtg, lambda vid, childrenvalues : sum(childrenvalues)+get_gu_nb_leaf(mtg, vid), lambda vid: get_gu_nb_leaf(mtg, vid))
+    return gu_recursive_property_from_terminal(mtg, lambda vid, childrenvalues : sum(childrenvalues)+get_gu_nb_leaf(mtg, vid), lambda vid: get_gu_nb_leaf(mtg, vid))
 
-def gus_terminals_depth(mtg, agregation = min):
-    return gu_recursive_property(mtg, lambda vid, childrenvalues : agregation(childrenvalues)+1, 0)
+def gus_depth_from_terminal(mtg, agregation = min):
+    return gu_recursive_property_from_terminal(mtg, lambda vid, childrenvalues : agregation(childrenvalues)+1, 0)
 
-def gu_recursive_property(mtg, nodeaxiom = lambda vid, childrenvalues : sum(childrenvalues)+1, leafaxiom = lambda vid : 0, root = None):
+def gus_depth_from_root(mtg):
+    return gu_recursive_property_from_root(mtg)
+
+def gu_recursive_property_from_terminal(mtg, nodeaxiom = lambda vid, childrenvalues : sum(childrenvalues)+1, leafaxiom = lambda vid : 0, root = None):
     import mangoG3 as mg3
     from openalea.mtg.traversal import post_order2
     res = {}
@@ -170,3 +179,46 @@ def gu_recursive_property(mtg, nodeaxiom = lambda vid, childrenvalues : sum(chil
                 assert mg3.is_gu_point(mtg,child)
             res[vid] = nodeaxiom(vid, [res[child] for child in children])
     return res
+
+def gu_recursive_property_from_root(mtg, nodeaxiom = lambda vid, parentvalue : parentvalue+1, rootaxiom = lambda vid : 0, root = None):
+    import mangoG3 as mg3
+    from openalea.mtg.traversal import pre_order2
+    res = {}
+    if root is None:
+        root = mtg.roots(scale=mtg.max_scale())[0]
+    for vid in pre_order2(mtg, root):
+        if mg3.get_parent(mtg, vid) is None: 
+            res[vid] = rootaxiom(vid) if callable(rootaxiom) else rootaxiom
+        elif mg3.is_gu_point(mtg,vid):
+            parent = mg3.get_parent(mtg, vid)
+            res[vid] = nodeaxiom(vid, res[parent])
+    return res
+
+def repare_mango_lighted():
+    import openalea.plantgl.all as pgl
+    s = pgl.Scene('../data/lightedG3.bgeom')
+    s2 = pgl.Scene('../data/consolidated_mango3d.bgeom')
+
+    pid2sid = {}
+    points = []
+    #key = lambda bbx : tuple([round(v,2) for v in bbx.getCenter()])
+    key = lambda bbx :  bbx.getCenter()
+
+    for i, (sid, lsh) in enumerate(s2.todict().items()):
+        bbx = pgl.BoundingBox(pgl.Scene(lsh))
+        c = key(bbx)
+        points.append(c)
+        pid2sid[i] = sid
+
+    kdtree = pgl.ANNKDTree3(points)
+
+    for i,sh in enumerate(s):
+        bbx = pgl.BoundingBox(sh)
+        res = kdtree.k_closest_points(key(bbx),1,pgl.norm(bbx.getSize()))
+        sh.id = pid2sid[res[0]]
+
+    pgl.Viewer.display(s)
+
+
+
+

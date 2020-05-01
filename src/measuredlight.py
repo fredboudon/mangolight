@@ -1,5 +1,5 @@
 def isnullmeasures(m):
-    if sum(map(lambda x : float(x),m)) < 1: return True
+    if sum([float(x) for x in m]) < 1: return True
     return False
 
 def days():
@@ -9,7 +9,7 @@ def days():
     files = glob.glob('../data/*.dat')
     dayset = []
     for f in files:
-        print 'process',f
+        print('process',f)
         stream = open(f,'r')
         for l in stream.readlines():
             info = l.split(',')
@@ -18,7 +18,7 @@ def days():
               dateinfo[2] = '2359'
             date = datetime.datetime.strptime(','.join(dateinfo),'%Y,%j,%H%M')
             if isnullmeasures(info[5:]):
-                print "remove", date
+                print("remove", date)
                 continue
             dayset.append(date)
     dayset.sort()
@@ -28,13 +28,13 @@ def histodays(dayset):
     import datetime
     from collections import Counter
     import  matplotlib.pyplot as plt
-    days = map(datetime.datetime.date, dayset)
+    days = list(map(datetime.datetime.date, dayset))
     c = Counter(days)
-    c = c.items()
+    c = list(c.items())
     c.sort(key = lambda x : x[0])
-    print range(len(c)), [v[1] for v in c]
-    plt.bar(range(len(c)),[v[1] for v in c], 1)
-    plt.xticks(range(len(c)),[v[0] for v in c],rotation=90)
+    print(list(range(len(c))), [v[1] for v in c])
+    plt.bar(list(range(len(c))),[v[1] for v in c], 1)
+    plt.xticks(list(range(len(c))),[v[0] for v in c],rotation=90)
     plt.show()
 
 
@@ -64,7 +64,7 @@ def read_sensor_data(timezone = 'Indian/Reunion'):
             #if isnullmeasures(info[5:]):
             #    print "remove", date
             #    continue
-            data.append([date]+map(float,info[5:]))
+            data.append([date]+list(map(float,info[5:])))
     data.sort(key = lambda v : v[0])
 
     sensororder = get_sensors_order()
@@ -154,8 +154,25 @@ def view_sensors():
     import openalea.plantgl.all as pgl
     sensors = get_sensors()
     s = pgl.Scene('../data/lightedG3.bgeom')
-    s2 = pgl.Scene([pgl.Shape(pgl.Translated(pos,pgl.Sphere(5)), pgl.Material((255,0,0)), int(sid[7:])) for sid,(pos,nml) in sensors.iteritems() ])
+    s2 = pgl.Scene([pgl.Shape(pgl.Translated(pos,pgl.Sphere(5)), pgl.Material((255,0,0)), sid) for sid,(pos,nml) in sensors.items() ])
     pgl.Viewer.display(s+s2)
+
+def get_sensor_representation(firstid = 100000000, size = 2):
+    import openalea.plantgl.all as pgl
+    sensors = get_sensors()
+    s2 = size/2.
+    trianglepoints = [(-s2,-s2,0),(-s2,s2,0),(s2,s2,0),(s2,-s2,0)]
+    triangles = [[0,1,2],[0,2,3]]
+    s2 = pgl.Scene([pgl.Shape(pgl.Translated(pos,pgl.TriangleSet(trianglepoints, triangles)), pgl.Material((255,0,0)), firstid+sid) for sid,(pos,nml) in sensors.items() ])
+    return s2
+
+def view_sensors_representation(size = 2):
+    import openalea.plantgl.all as pgl
+    sensors = get_sensors()
+    s = pgl.Scene('../data/lightedG3.bgeom')
+    s2 = get_sensor_representation(size)
+    pgl.Viewer.display(s+s2)
+
 
 
 def associate_sensors(sensors, mtg = None, withleaf = True, nbnbg = 10):
@@ -166,15 +183,15 @@ def associate_sensors(sensors, mtg = None, withleaf = True, nbnbg = 10):
     pos = mtg.property("Position")
 
     from scipy.spatial import KDTree
-    points = [[p.x,p.y,p.z] for vid,p in pos.items() if mtg.edge_type(vid) == '<']
+    points = [[p.x,p.y,p.z] for vid,p in list(pos.items()) if mtg.edge_type(vid) == '<']
     kdtree = KDTree(points)
-    guidmap = dict(enumerate([vid for vid in pos.keys() if mtg.edge_type(vid) == '<']))
+    guidmap = dict(enumerate([vid for vid in list(pos.keys()) if mtg.edge_type(vid) == '<']))
 
-    sensorpos = [p for p,n in sensors.values()]
+    sensorpos = [p for p,n in list(sensors.values())]
     if withleaf:
         distances, pids = kdtree.query(sensorpos,nbnbg)
         ndistance, npids = [],[]
-        for sid, ldists, lpids in zip(range(len(pids)),distances, pids):
+        for sid, ldists, lpids in zip(list(range(len(pids))),distances, pids):
             for i,pid in enumerate(lpids):
                 if mg3.get_gu_nb_leaf(mtg, guidmap[pid]) > 0:
                     ndistance.append(ldists[i])
@@ -205,7 +222,7 @@ def associate_sensors(sensors, mtg = None, withleaf = True, nbnbg = 10):
                 sgu = cgu
         return sgu
 
-    gus = dict([( sid , find_closest(p,gu)) for sid, p,gu in zip(sensors.keys(), sensorpos, gus) ])
+    gus = dict([( sid , find_closest(p,gu)) for sid, p,gu in zip(list(sensors.keys()), sensorpos, gus) ])
     return gus
 
 def view_sensor_association(association = None, sensors = None):
@@ -215,24 +232,24 @@ def view_sensor_association(association = None, sensors = None):
         sensors = get_sensors()
     if association is None:
         association = associate_sensors(sensors)
-    cols = [pgl.Color3.fromHSV((float(randint(0,360)),100,100)) for i in xrange(32)]
+    cols = [pgl.Color3.fromHSV((float(randint(0,360)),100,100)) for i in range(32)]
 
     s = pgl.Scene('../data/consolidated_mango3d.bgeom')
     ns = s.todict()
     s1 = pgl.Scene()
-    for sid,guid in association.items():
+    for sid,guid in list(association.items()):
         mat = pgl.Material(cols[sid-1])
         for sh in ns[guid]:
             sh.appearance = mat
             s1.add(sh)
-    s2 = pgl.Scene([pgl.Shape(pgl.Translated(pos,pgl.Sphere(5)), pgl.Material(cols[sid-1]), sid) for sid,(pos,nml) in sensors.iteritems() ])
+    s2 = pgl.Scene([pgl.Shape(pgl.Translated(pos,pgl.Sphere(5)), pgl.Material(cols[sid-1]), sid) for sid,(pos,nml) in sensors.items() ])
     pgl.Viewer.display(s1+s2)
 
 
 def sensors_associate_to_non_leafy_gus(association):
     import mangoG3 as mg3
     mtg = mg3.get_G3_mtg()
-    return [sid for sid, guid in association.items() if mg3.get_gu_nb_leaf(mtg, guid) == 0]
+    return [sid for sid, guid in list(association.items()) if mg3.get_gu_nb_leaf(mtg, guid) == 0]
 
 
 
@@ -240,7 +257,7 @@ def plot_data(sensors = None, daterange = None, data = None, meteo = None):
     import  matplotlib.pyplot as plt
     import pandas
     if data is None:
-        data = get_data()
+        data = get_sensor_data()
     if meteo is None:
         meteo = get_meteo()
         ghi = meteo.loc[data.index,'global_radiation']
@@ -277,11 +294,12 @@ def read_simulateddata(rep = 'results', localisation = 'Indian/Reunion'):
     from pandas import concat, read_csv, DatetimeIndex
 
     files = glob.glob(os.path.join(rep, 'result*.csv'))
-    print files
+    print(files)
     df = concat([read_csv(f) for f in files])
-    del df[u'Unnamed: 0']
+    del df['Unnamed: 0']
     df.sort_values(by='date')
-    index = DatetimeIndex(df['date']).tz_localize('UTC').tz_convert(localisation)
+    print(df)
+    index = DatetimeIndex(df['date']) #,tz='UTC').tz_convert(localisation)
     df = df.set_index(index)
     return df
 
@@ -300,11 +318,14 @@ def plotdatamain():
         sensors = []
         for i in range(1,len(sys.argv)):
             sensors.append(eval(sys.argv[i]))
-    plot_data(sensors, daterange=('2017-07-01','2017-07-13'))
+    #plot_data(sensors, daterange=('2017-07-06','2017-07-10'))
+    plot_data(sensors, daterange=('2017-08-25','2017-08-28'))
+    
 
 if __name__ == '__main__':
-    sensors = get_sensors()
-    association = associate_sensors(sensors)
-    print association
-    print sensors_associate_to_non_leafy_gus(association)
-    view_sensor_association(association, sensors)
+    #sensors = get_sensors()
+    #association = associate_sensors(sensors)
+    #print association
+    #print sensors_associate_to_non_leafy_gus(association)
+    #view_sensors_representation()
+    plotdatamain()

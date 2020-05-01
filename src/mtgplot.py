@@ -1,18 +1,19 @@
 from openalea.mtg import MTG
-import openalea.mtg.plantframe as opf; reload(opf) 
+import imp
+import openalea.mtg.plantframe as opf; imp.reload(opf) 
 from openalea.mtg.plantframe.plantframe import PlantFrame
 from openalea.mtg.plantframe.dresser import DressingData
 from openalea.plantgl.all import *
 
 def pos_prop(mtg):
     xx,yy,zz = mtg.property("XX"),mtg.property("YY"),mtg.property("ZZ")
-    return dict ([(node,(x,-yy[node],-zz[node])) for node,x in xx.items()])
+    return dict ([(node,(x,-yy[node],-zz[node])) for node,x in list(xx.items())])
 
 from math import radians, degrees
 
 def orientation_prop(mtg):
     aa,bb,cc = mtg.property("AA"),mtg.property("BB"),mtg.property("CC")
-    return dict ([(node,(radians(a),radians(bb[node]),radians(cc[node]))) for node,a in aa.items()])
+    return dict ([(node,(radians(a),radians(bb[node]),radians(cc[node]))) for node,a in list(aa.items())])
 
 
 matrixmethod = True
@@ -20,11 +21,28 @@ matrixmethod = True
 
 class HeigthColoring:
     def __init__(self, mtg):
-        self.heights = dict([(v,mtg.Height(v)) for v in mtg.vertices(scale=mtg.max_scale())])
+        self.heights = dict([(v,mtg.Height(v)) for v in mtg.vertices(scale=mtg.max_scale()) if mtg.nb_children(v) == 0 ])
         self.maxh = float(max(self.heights.values()))
+        self.minh = float(min(self.heights.values()))
+        self.deltah = self.maxh - self.minh
 
     def __call__(self, turtle, vid):
-        turtle.interpolateColors(1,2,self.heights[vid]/self.maxh)
+        if vid in self.heights:
+            f = (self.heights[vid] - self.minh)*2/self.deltah
+            #if f > 1.5 :
+            #    turtle.setColor(3)
+            #elif f < 1:
+            #    turtle.setColor(5)
+            #else:
+            #    turtle.setColor(4)
+            minc, maxc, medianc = 5,3,4
+            if f > 1:
+                turtle.interpolateColors(medianc,maxc,f-1)
+            else:
+                turtle.interpolateColors(minc,medianc,f)
+        else:
+            turtle.setCustomAppearance(Material((100,100,100),transparency=0.5))
+
 
 class LeafColoring: 
     def __init__(self, mtg):
@@ -75,9 +93,9 @@ def leafsmb():
     leafsmb.name = 'leaf'
     return leafsmb
 
-woodidshift = 100000
 
-def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True, todate = None, display = True):
+
+def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True, todate = None, display = True, woodidshift = 0):
     posproperty = pos_prop(mtg)
     orientations = orientation_prop(mtg)
 
@@ -108,7 +126,7 @@ def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True
 
     #diameters = pf.compute_diameters()
     #pf.points = dict([(node,Vector3(pos)-pf.origin) for node,pos in pf.points.items()])
-    pf.points = dict([(node,Vector3(pos)) for node,pos in pf.points.items()])
+    pf.points = dict([(node,Vector3(pos)) for node,pos in list(pf.points.items())])
 
 
     colorizer = colorizer(mtg)
@@ -120,16 +138,16 @@ def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True
     todraw = None
     if not focus is None:
         if type(focus) == str:
-            vids = [vid for vid,rem in mtg.property('Id').items() if rem == focus]
+            vids = [vid for vid,rem in list(mtg.property('Id').items()) if rem == focus]
             if len(vids) >= 1:
                 todraw = set()
                 for v in vids:
-                    print 'Display', v
+                    print('Display', v)
                     todraw |= set(mtg.Descendants(v))
                     todraw |= set(mtg.Ancestors(v))
                 focus = set(vids)
             else:
-                print 'Cannot find', focus
+                print('Cannot find', focus)
                 focus = None
         else:
             todraw = set(mtg.Descendants(focus))
@@ -176,7 +194,7 @@ def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True
                         seglength = length/nbleaf
                         #parentradius = diameters.get(parent)
                         #segdiaminc = (radius-parentradius)/nbleaf
-                        for i in xrange(nbleaf):
+                        for i in range(nbleaf):
                             turtle.f(seglength) #,parentradius+segdiaminc*(i+1))
                             turtle.rollR(144)
                             turtle.setId(v)
@@ -216,7 +234,7 @@ def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True
 def retrievedates(mtg):
     import numpy as np
     import pandas as pd
-    dates = np.unique(mtg.property('DigitDate').values())
+    dates = np.unique(list(mtg.property('DigitDate').values()))
     dates.sort()
     dates = np.unique([pd.Timestamp(d.year,d.month,d.day,23,59) for d in dates])
     return dates
@@ -232,8 +250,8 @@ def discretization_test(sc, minsurface = 1e-4):
         sfs = surfaces(triangleset.indexList, triangleset.pointList)
         nmin = sfs.getMin()
         if nmin < minsurface:
-            print '!!!',sh.id
-        print sh.id, nmin
+            print('!!!',sh.id)
+        print(sh.id, nmin)
         if minmin is None or nmin < minmin:
             minmin = nmin
 
@@ -246,4 +264,4 @@ def triangles(sh):
 
 if __name__ == '__main__':
     g = MTG('../data/consolidated_mango3d.mtg')
-    sc = plot(g, leaves = True, gc = False, display = True)
+    sc = plot(g, leaves = True, gc = False, display = True, colorizer = LeafColoring, woodidshift=100000)

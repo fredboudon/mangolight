@@ -8,7 +8,7 @@ def test_bug(raw, scene):
     from openalea.plantgl.all import Tesselator
     scdict = scene.todict()
     result = []
-    for sid, values in raw.items():
+    for sid, values in list(raw.items()):
         maxvalue = max(values)
         if maxvalue > 1 :
             triangleids = []
@@ -47,7 +47,7 @@ def plot_detection(detect):
     cmap = PglMaterialMap(1,max([value for sid, tid, value, points in detect]))
     result = Scene()
     for sid, tid, value, points in detect:
-        result.add(Shape(TriangleSet(points,[range(3)]), cmap(value),sid))
+        result.add(Shape(TriangleSet(points,[list(range(3))]), cmap(value),sid))
     Viewer.display(result)
     return result
 
@@ -73,7 +73,7 @@ def plot_edgelenth_ei(detect, threshold = None):
     else:
         below = [(elv,eiv) for elv,eiv in zip(el,ei) if elv < threshold]
         above = [(elv,eiv) for elv,eiv in zip(el,ei) if elv >= threshold]
-        print len(below), len(above)
+        print(len(below), len(above))
         plot([elv for elv,eiv in below] ,[eiv for elv,eiv in below],'ro')
         plot([elv for elv,eiv in above] ,[eiv for elv,eiv in above],'go')
     show()
@@ -100,7 +100,7 @@ def plot_height_ei(detect, threshold = None):
     else:
         below = [(elv,eiv) for elv,eiv in zip(el,ei) if elv < threshold]
         above = [(elv,eiv) for elv,eiv in zip(el,ei) if elv >= threshold]
-        print len(below), len(above)
+        print(len(below), len(above))
         plot([elv for elv,eiv in below] ,[eiv for elv,eiv in below],'ro')
         plot([elv for elv,eiv in above] ,[eiv for elv,eiv in above],'go')
     show()

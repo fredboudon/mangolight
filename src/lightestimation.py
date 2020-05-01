@@ -23,10 +23,10 @@ mindate, maxdate = min(measuredates), max(measuredates)
 
 
 # a digitized mango tree
-mango = pgl.Scene('../data/consolidated_mango3d-b.bgeom')
+mango = pgl.Scene('../data/consolidated_mango3d.bgeom')
+#mango = pgl.Scene('../data/mangopart.bgeom')
 
-#mango = pgl.Scene('ligthbugs.bgeom')
-#pgl.Viewer.display(mango)
+
 
 ghi = meteo.loc[measuredates,'global_radiation']
 
@@ -37,27 +37,31 @@ def get_dates():
     import glob
     alldates = set(map(lambda d : d.strftime('%Y-%m-%d'), measuredates))
 
-    donedates = map(lambda x: x[8:-4], glob.glob('results_*.csv'))
+    p = 'results-caribu'
+    donedates = map(lambda x: x[len(p)+9:-4], glob.glob(p+'/results_*.csv'))
 
-    alldates = alldates.difference(donedates) 
+    #alldates = alldates.difference(donedates) 
+    alldates = alldates.intersection(donedates) 
 
     alldates= list(alldates)
     alldates.sort()
     return alldates
 
 from random import sample
-sdates = sample(get_dates(), 10)
+#sdates = sample(get_dates(), 10)
 
 ghigroup = ghi.groupby(pandas.Grouper(freq='D'))
 
-def process(sdates):
+def process_caribu(sdates, gus = None):
     from alinea.caribu.CaribuScene import CaribuScene
 
     resdates = []
+    if gus is None:
+        gus = list(mango.todict().keys())
     results = [[] for i in gus]
-    print 'Convert scene for caribu'
+    print ('Convert scene for caribu')
     scene = CaribuScene(mango, scene_unit='cm')
-    print 'done'
+    print ('done')
 
     for d in sdates:
         daydate = pandas.Timestamp(d, tz=localisation['timezone'])
@@ -90,14 +94,16 @@ def process(sdates):
     res = pandas.DataFrame(dict([('date',resdates)]+[('gu_'+str(gu), results[i]) for i,gu in enumerate(gus)]))
     return res
 
+def process(sdates):
+    process_caribu(sdates)
 
 def processall(sdates):
     from alinea.caribu.CaribuScene import CaribuScene
 
-    print 'Convert scene for caribu ...'
+    print ('Convert scene for caribu ...')
     t = time.time()
     scene = CaribuScene(mango, scene_unit='cm')
-    print ' ... done in', time.time() - t
+    print (' ... done in', time.time() - t)
 
     gus = scene.scene.keys()
 
@@ -108,7 +114,7 @@ def processall(sdates):
         resdates = []
         results = [[] for i in gus]
         for timeindex, lghi in sghi.iteritems():
-            print timeindex
+            print (timeindex)
 
             if lghi > 0:
                 sun, sky = sun_sky_sources(ghi=lghi, dates=timeindex, **localisation)
@@ -121,8 +127,39 @@ def processall(sdates):
                     results[i].append(eitot)
 
         resd = pandas.DataFrame(dict([('date',resdates)]+[('gu_'+str(gu), results[i]) for i,gu in enumerate(gus)]))
-        print 'Write '+repr('results_'+d+'.csv')
+        print ('Write '+repr('results_'+d+'.csv'))
         resd.to_csv('results_'+d+'.csv')
+
+
+    return res
+
+def processall(sdates):
+
+    gus = mango.todict().keys()
+
+
+    for d in sdates:
+        daydate = pandas.Timestamp(d, tz=localisation['timezone'])
+        sghi = ghigroup.get_group(daydate)
+
+        resdates = []
+        results = [[] for i in gus]
+        for timeindex, lghi in sghi.iteritems():
+            print (timeindex)
+
+            if lghi > 0:
+                sun, sky = sun_sky_sources(ghi=lghi, dates=timeindex, **localisation)
+                agg = fractalysis(mango, sun, sky)
+                agg = agg['irradiance']
+
+                resdates.append(timeindex)
+                for i,gu in enumerate(gus):
+                    eitot = agg.get(gu,0)
+                    results[i].append(eitot)
+
+        resd = pandas.DataFrame(dict([('date',resdates)]+[('gu_'+str(gu), results[i]) for i,gu in enumerate(gus)]))
+        print ('Write '+repr('results_fct_'+d+'.csv'))
+        resd.to_csv('fractalysis/results_fct_'+d+'.csv')
 
 
     return res
