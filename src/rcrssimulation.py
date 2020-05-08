@@ -22,7 +22,7 @@ mindate, maxdate = min(measuredates), max(measuredates)
 
 # a digitized mango tree
 mango = pgl.Scene('../data/consolidated_mango3d-wd.bgeom')
-woodidshift = 100000
+idshift = 1000
 
 global_horiz_irradiance = meteo.loc[measuredates,'global_radiation']
 ghigroup = global_horiz_irradiance.groupby(pandas.Grouper(freq='D'))
@@ -48,7 +48,7 @@ def get_dates():
 
 targetdate = '2017-08-26'
 
-def toCaribuScene(mangoscene = mango, leaf_prop=leaf_prop, wood_prop=wood_prop, woodidshift=woodidshift) :
+def toCaribuScene(mangoscene = mango, leaf_prop=leaf_prop, wood_prop=wood_prop, idshift=idshift) :
     from alinea.caribu.CaribuScene import CaribuScene
     print ('Convert scene for caribu')
     t = time.time()
@@ -56,8 +56,8 @@ def toCaribuScene(mangoscene = mango, leaf_prop=leaf_prop, wood_prop=wood_prop, 
     opt = { 'Rc' : {}, 'Rs' : {}}
     for vid in geomdict:
         for rv in ['Rc','Rs']:
-            opt[rv][vid] = (leaf_prop if vid < woodidshift else wood_prop)[rv]
-    cs = CaribuScene(mangoscene, opt=opt, scene_unit='cm',  debug = DEBUG)
+            opt[rv][vid] = (wood_prop if (vid % idshift) == 0 else leaf_prop)[rv]
+    cs = CaribuScene(mangoscene, opt=opt, scene_unit='cm', pattern=(-230,-245,320,290), debug = DEBUG)
     print('done in', time.time() - t)
     return cs
 
@@ -75,14 +75,85 @@ def caribu(scene, sun = None, sky = None, view = False, debug = False):
     print('... ',len(light),' sources.')
     scene.setLight(light)
     print('Run caribu')
-    raw, agg = cs.run(direct=False)
+    raw, agg = scene.run(direct=False, infinite = True, d_sphere = 60)
     print('made in', time.time() - t)
     if view : 
-        cs.plot(raw['Ei'])
+        scene.plot(raw['Ei'])
     return raw, agg
 
 
-def process_caribu(scene, sdates, gus = None, outdir = None):
+def normalize_energy(lights):
+    el,az,ei = lights
+    sumei = ei.sum()
+    lights = el, az, ei / sumei
+    return lights, sumei
+
+import multiprocessing
+import glob
+import pickle
+from random import randint
+from os.path import join
+
+def save_partial_res(res, d, tag, outdir = None):
+    fname = os.path.join(outdir,'result_%s_%s.pkl' % (str(d), tag))
+    stream = open(fname,'wb')
+    pickle.dump(res, stream)
+
+def test_partial_res(d, tag, outdir = None):
+    fname = os.path.join(outdir,'result_%s_%s.pkl' % (str(d), tag))
+    return os.path.exists(fname)
+
+def filter_keys(values, gus):
+    if gus is None : 
+        return values
+    else:
+        return { i : values.get(i,0) for i in values.keys() if i // idshift in gus }
+
+def filter_res(values, gus):
+    if gus is None : 
+        return list(values.values())
+    else:
+        return [ values.get(i,0) for i in values.keys() if i // idshift in gus ]
+
+def partial_sky_res(scname, skyid, skydir, d, gus, outdir):
+    if test_partial_res(d, 'sky_'+str(skyid),  outdir):
+        return
+    s = pgl.Scene(scname)
+    cs = toCaribuScene(s)
+    ei = skydir[2][0]
+    print('Sky ',skyid,':',*skydir)
+    _, aggsky1 = caribu(cs, None, skydir)
+    aggskyRc = filter_keys(aggsky1['Rc']['Ei'], gus)
+    aggskyRs = filter_res(aggsky1['Rs']['Ei'], gus)
+    lres = dict()
+    lres['Entity'] = ['incident']+list(aggskyRc.keys())
+    lres['DiffusRc-'+str(skyid)] = [ei]+list(aggskyRc.values())
+    lres['DiffusRs-'+str(skyid)] = [ei]+aggskyRs 
+    save_partial_res(lres, d, 'sky_'+str(skyid), outdir)
+
+def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir):
+    if test_partial_res(d, 'sun_'+str(timeindex.hour)+'H',outdir):
+        return
+    s = pgl.Scene(scname)
+    cs = toCaribuScene(s)
+    print('Sun :',str(timeindex.hour)+'H')
+
+    # We need to convert PAR global, direct, diffuse horizontal irradiance into Rc and Rs irradiance
+
+    hours = pandas.date_range(end=timeindex, freq="1H", periods = 1) # We compute 1 positions of sun during the sun.
+    suns = sun_sources(direct_horizontal_irradiance, dates=hours, **localisation)
+    #print(direct_horizontal_irradiance)
+    suns, _ = normalize_energy(suns)
+
+    _, aggsun = caribu(cs, suns, None)
+    aggsunRc = filter_res(aggsun['Rc']['Ei'], gus)
+    aggsunRs = filter_res(aggsun['Rs']['Ei'], gus)
+    lres = dict()
+    lres[str(timeindex.hour)+'H-DirectRc'] = [1]+aggsunRc
+    lres[str(timeindex.hour)+'H-DirectRs'] = [1]+aggsunRs
+    save_partial_res(lres, d, 'sun_'+str(timeindex.hour)+'H', outdir)
+
+def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multiprocessing.cpu_count()+1):
 
     if not type(sdates) == list:
         sdates = [sdates]
@@ -91,15 +162,13 @@ def process_caribu(scene, sdates, gus = None, outdir = None):
     allgus = list(mango.todict().keys())
     #if gus is None:
 
-    def filter_res(values, gus = gus):
-        if gus is None : 
-            return list(values.values())
-        else:
-            return { i : values.get(i,0) for i in gus }
+    scname = 'tmpscene_%i.bgeom' % randint(0,1000)
+    scene.save(scname)
+
+    pool = multiprocessing.Pool(processes=nbprocesses)
 
     for d in sdates:
 
-        res = dict([('GUs',['incident']+(gus if gus else allgus))])
 
         daydate = pandas.Timestamp(d, tz=localisation['timezone'])
         day_global_horiz_radiation = ghigroup.get_group(daydate)
@@ -108,12 +177,12 @@ def process_caribu(scene, sdates, gus = None, outdir = None):
         sky_irr = sky_irradiances(ghi=day_global_horiz_radiation, dates=hours, **localisation)
         # normalised mean sky for the day
         _, sky = sun_sky_sources(ghi=day_global_horiz_radiation, dates=hours, **localisation)
-        el,az,ei = sky
-        sky = el, az, ei / ei.sum()
 
-        _, aggsky1 = caribu(scene, None, sky)
-        aggskyRc = filter_res(aggsky1['Rc']['Ei'])
-        aggskyRs = filter_res(aggsky1['Rs']['Ei'])
+        sky, _ = normalize_energy(sky)
+
+        for dirid, (az,el,ei) in enumerate(zip(*sky)):
+            pool.apply_async(partial_sky_res, args=(scname, dirid, [[az],[el],[ei]], d, gus, outdir))
+            #partial_sky_res(scname, dirid, [[az],[el],[ei]], d, gus, outdir)
 
         for timeindex, row in sky_irr.iterrows():
             if row.dni > 0:
@@ -121,35 +190,29 @@ def process_caribu(scene, sdates, gus = None, outdir = None):
                 diffuse_horizontal_irradiance = row.dhi
                 direct_horizontal_irradiance  = global_horizontal_irradiance - diffuse_horizontal_irradiance
 
-                # We need to convert PAR global, direct, diffuse horizontal irradiance into Rc and Rs irradiance
+                pool.apply_async(partial_sun_res, args=(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir))
+                #partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
 
-                hours = pandas.date_range(end=timeindex, freq="15min", periods = 4) # We compute 4 positions of suns during the sun.
-                suns = sun_sources(direct_horizontal_irradiance, dates=hours, **localisation)
-                #print(direct_horizontal_irradiance)
-                #print(hours, suns)
-                _, aggsun = caribu(scene, suns, None)
-                aggsunRc = filter_res(aggsun['Rc']['Ei'])
-                aggsunRs = filter_res(aggsun['Rs']['Ei'])
-                res[str(timeindex.hour)+'H-DirectRc'] = [direct_horizontal_irradiance]+aggsunRc
-                res[str(timeindex.hour)+'H-DirectRs'] = [direct_horizontal_irradiance]+aggsunRs
-                res[str(timeindex.hour)+'H-DiffusRc'] = [diffuse_horizontal_irradiance]+[v*diffuse_horizontal_irradiance for v in aggskyRc]
-                res[str(timeindex.hour)+'H-DiffusRs'] = [diffuse_horizontal_irradiance]+[v*diffuse_horizontal_irradiance for v in aggskyRs]
-                res[str(timeindex.hour)+'H-TransmisRc'] = [global_horizontal_irradiance]+[sun + sky*diffuse_horizontal_irradiance for sun,sky in zip(aggsunRc,aggskyRc)]
-                res[str(timeindex.hour)+'H-TransmisRs'] = [global_horizontal_irradiance]+[sun + sky*diffuse_horizontal_irradiance for sun,sky in zip(aggsunRs,aggsunRs)]
+        pool.close()
+        pool.join()
 
-                #eitot = aggsun.get(gu,0) + aggsky1.get(gu,0)*row.dhi
-
+        res = dict() 
+        for fname in glob.glob(os.path.join(outdir,'result_%s_*.pkl' % str(d))):
+            lres = pickle.load(open(fname,'rb'))
+            os.remove(fname)
+            res.update(lres)
         res = pandas.DataFrame(res)
-        resdates[d] = res
         if not outdir is None:
             if not os.path.exists(outdir):
                 os.mkdir(outdir)
             res.to_csv(os.path.join(outdir,'result_%s.csv' % str(d)))
+        resdates[d] = res
+
+    os.remove(scname)
 
     return resdates
 
 if __name__ == '__main__':
-    mango = [sh for sh in mango if sh.id < woodidshift]
+    mango = [sh for sh in mango if sh.id % idshift > 0]
     mango = pgl.Scene(mango)
-    cs = toCaribuScene(mango)
-    res = process_caribu(cs, targetdate,outdir = 'results-rcrs')
+    res = process_caribu(mango, targetdate,outdir = 'results-rcrs')

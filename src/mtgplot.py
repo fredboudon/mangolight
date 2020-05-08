@@ -69,14 +69,14 @@ def leafsmb():
 
     leafdiam = QuantisedFunction(NurbsCurve2D(Point3Array([Vector3(0,0.0,1),Vector3(0.239002,1.00091,1),Vector3(0.485529,0.991241,1),Vector3(0.718616,1.00718,1),Vector3(0.877539,0.231273,1),Vector3(1,0.0,1)])))
     leafpath = NurbsCurve2D(Point3Array([(-0.5, 0, 1),(-0.145022, -0.0735931, 1),(0.0844156, -0.212121, 1),(0.123377, -0.497835, 1)]))    
-    leafsection = NurbsCurve2D(Point3Array([Vector3(-0.508209,0.16873,1),Vector3(-0.515031,0.138195,1),Vector3(-0.198373,-0.0924227,1),Vector3(-0.00298323,0.188761,1),Vector3(0.0897461,-0.106293,1),Vector3(0.555704,0.0979703,1),Vector3(0.545047,0.12817,1)]))
-    leafsection.stride = 2
+    leafsection = NurbsCurve2D(Point3Array([Vector3(-0.5,0.15,1),Vector3(-0.5,0.1,1),Vector3(-0.1,-0.1,1),Vector3(0,0.2,1),Vector3(0.1,-0.1,1),Vector3(0.5,0.1,1),Vector3(0.5,0.15,1)]))
+    leafsection.stride = 1
     length = 1
 
     turtle = PglTurtle()
     turtle.push()
     turtle.down(60)
-    turtle.startGC().sweep(leafpath,leafsection,length,length/5.,length*0.24,leafdiam).stopGC()
+    turtle.startGC().sweep(leafpath,leafsection,length,length/3.,length*0.24,leafdiam).stopGC()
     turtle.pop()
 
     leafsmb = turtle.getScene()[0].geometry
@@ -90,12 +90,15 @@ def leafsmb():
     leafsmb.indexList = leafsmb.indexList.opposite_subset(toremove)
     assert leafsmb.isValid()
 
+    print(abs(surface(leafsmb) - 0.18))
+    assert abs(surface(leafsmb) - 0.18) < 0.1
+
     leafsmb.name = 'leaf'
     return leafsmb
 
 
 
-def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True, todate = None, display = True, woodidshift = 0):
+def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True, todate = None, display = True, leafid = True, idshift = 1000):
     posproperty = pos_prop(mtg)
     orientations = orientation_prop(mtg)
 
@@ -165,11 +168,14 @@ def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True
 
         from random import gauss
         radius = diameters.get(v)
+        #resolution = 4+int(4*(radius -1.6)/280.)
         pt = pf.points.get(v)
 
         unittype = g.property('UnitType').get(vid,'B')
+
+        turtle.sectionResolution = 4 
         if pt:
-            turtle.setId(woodidshift+v)
+            turtle.setId(v*idshift)
             if 'M' in unittype:
                 pass
             elif 'C' in unittype:
@@ -197,9 +203,10 @@ def plot(mtg, focus = None, colorizer = ClassColoring, leaves = False, gc = True
                         for i in range(nbleaf):
                             turtle.f(seglength) #,parentradius+segdiaminc*(i+1))
                             turtle.rollR(144)
-                            turtle.setId(v)
+                            if leafid:
+                                turtle.setId(v*idshift+i+1)
                             turtle.surface('leaf', gauss(*leaf_length_distrib[mtg.edge_type(mtg.parent(v))]))
-                            turtle.setId(woodidshift+v)
+                            turtle.setId(v*idshift)
                             #leaf(turtle, gauss(*leaf_length_distrib[mtg.edge_type(mtg.parent(v))]) )
 
                 else:
@@ -264,4 +271,4 @@ def triangles(sh):
 
 if __name__ == '__main__':
     g = MTG('../data/consolidated_mango3d.mtg')
-    sc = plot(g, leaves = True, gc = False, display = True, colorizer = LeafColoring, woodidshift=100000)
+    sc = plot(g, leaves = True, gc = False, display = True, colorizer = LeafColoring, idshift=1000)
