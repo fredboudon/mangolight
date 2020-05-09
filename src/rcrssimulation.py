@@ -220,5 +220,5 @@ def process_quasimc(scene, sdates):
 if __name__ == '__main__':
     mango = [sh for sh in mango if sh.id % idshift > 0]
     mango = pgl.Scene(mango)
-    #res = process_caribu(mango, targetdate,outdir = 'results-rcrs')
-    process_quasimc(mango)
+    res = process_caribu(mango, targetdate,outdir = 'results-rcrs')
+    #process_quasimc(mango)
