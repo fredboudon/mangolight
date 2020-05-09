@@ -95,6 +95,8 @@ from random import randint
 from os.path import join
 
 def save_partial_res(res, d, tag, outdir = None):
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
     fname = os.path.join(outdir,'result_%s_%s.pkl' % (str(d), tag))
     stream = open(fname,'wb')
     pickle.dump(res, stream)
@@ -212,7 +214,11 @@ def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multi
 
     return resdates
 
+def process_quasimc(scene, sdates):
+
+
 if __name__ == '__main__':
     mango = [sh for sh in mango if sh.id % idshift > 0]
     mango = pgl.Scene(mango)
-    res = process_caribu(mango, targetdate,outdir = 'results-rcrs')
+    #res = process_caribu(mango, targetdate,outdir = 'results-rcrs')
+    process_quasimc(mango)
