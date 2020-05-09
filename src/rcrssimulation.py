@@ -214,9 +214,6 @@ def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multi
 
     return resdates
 
-def process_quasimc(scene, sdates):
-
-
 if __name__ == '__main__':
     mango = [sh for sh in mango if sh.id % idshift > 0]
     mango = pgl.Scene(mango)
