@@ -75,7 +75,8 @@ def caribu(scene, sun = None, sky = None, view = False, debug = False):
     print('... ',len(light),' sources.')
     scene.setLight(light)
     print('Run caribu')
-    raw, agg = scene.run(direct=False, infinite = True, d_sphere = 60)
+    #raw, agg = scene.run(direct=False, infinite = True, d_sphere = 60)
+    raw, agg = scene.run(direct=True) #, infinite = False, d_sphere = 60)
     print('made in', time.time() - t)
     if view : 
         scene.plot(raw['Ei'])
@@ -183,8 +184,10 @@ def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multi
         sky, _ = normalize_energy(sky)
 
         for dirid, (az,el,ei) in enumerate(zip(*sky)):
-            pool.apply_async(partial_sky_res, args=(scname, dirid, [[az],[el],[ei]], d, gus, outdir))
-            #partial_sky_res(scname, dirid, [[az],[el],[ei]], d, gus, outdir)
+            if nbprocesses > 1:
+                pool.apply_async(partial_sky_res, args=(scname, dirid, [[az],[el],[ei]], d, gus, outdir))
+            else:
+                partial_sky_res(scname, dirid, [[az],[el],[ei]], d, gus, outdir)
 
         for timeindex, row in sky_irr.iterrows():
             if row.dni > 0:
@@ -192,8 +195,10 @@ def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multi
                 diffuse_horizontal_irradiance = row.dhi
                 direct_horizontal_irradiance  = global_horizontal_irradiance - diffuse_horizontal_irradiance
 
-                pool.apply_async(partial_sun_res, args=(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir))
-                #partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
+                if nbprocesses > 1:
+                    pool.apply_async(partial_sun_res, args=(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir))
+                else:
+                    partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
 
         pool.close()
         pool.join()
@@ -217,5 +222,5 @@ def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multi
 if __name__ == '__main__':
     mango = [sh for sh in mango if sh.id % idshift > 0]
     mango = pgl.Scene(mango)
-    res = process_caribu(mango, targetdate,outdir = 'results-rcrs')
+    res = process_caribu(mango, targetdate,outdir = 'results-rcrs2',nbprocesses=1)
     #process_quasimc(mango)
