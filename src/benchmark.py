@@ -5,8 +5,7 @@ from alinea.astk.sun_and_sky import sun_sky_sources, sun_sources
 from alinea.astk.meteorology.sky_irradiance import sky_irradiances
 from lightsimulator import *
 from measuredlight import *
-import os
-
+import os, sys
 DEBUG = False
 
 localisation={'latitude':-21.32, 'longitude':55.5, 'timezone': 'Indian/Reunion'}
@@ -289,9 +288,4 @@ def test_process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = 
 
 if __name__ == '__main__':
     mango = pgl.Scene([sh for sh in mango if sh.id % idshift > 0])
-    from random import sample
-    #mango = sample(mango,1000)
-    #mango = pgl.Scene(mango)
-    #pgl.Viewer.display(mango)
-    res = process_caribu(mango, targetdate, outdir = 'results-rcrs-mac')
-    #process_quasimc(mango)
+    res = test_process_caribu(mango, targetdate, outdir = 'results-rcrs-'+sys.platform)
