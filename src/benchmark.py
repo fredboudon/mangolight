@@ -288,4 +288,4 @@ def test_process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = 
 
 if __name__ == '__main__':
     mango = pgl.Scene([sh for sh in mango if sh.id % idshift > 0])
-    res = test_process_caribu(mango, targetdate, outdir = 'results-rcrs-'+sys.platform)
+    res = test_process_caribu(mango, targetdate, outdir = 'benchmark-'+sys.platform)
