@@ -6,6 +6,8 @@ from alinea.astk.meteorology.sky_irradiance import sky_irradiances
 from lightsimulator import *
 from measuredlight import *
 import os, sys
+import datetime
+
 DEBUG = False
 
 localisation={'latitude':-21.32, 'longitude':55.5, 'timezone': 'Indian/Reunion'}
@@ -20,7 +22,6 @@ measuredates = measuredlight.index
 mindate, maxdate = min(measuredates), max(measuredates)
 
 # a digitized mango tree
-mango = pgl.Scene('../data/consolidated_mango3d-wd.bgeom')
 idshift = 1000
 
 global_horiz_irradiance = meteo.loc[measuredates,'global_radiation']
@@ -47,7 +48,7 @@ def get_dates():
 
 targetdate = '2017-08-26'
 
-def toCaribuScene(mangoscene = mango, leaf_prop=leaf_prop, wood_prop=wood_prop, idshift=idshift) :
+def toCaribuScene(mangoscene, leaf_prop=leaf_prop, wood_prop=wood_prop, idshift=idshift) :
     from alinea.caribu.CaribuScene import CaribuScene
     print ('Convert scene for caribu')
     t = time.time()
@@ -134,8 +135,6 @@ def partial_sky_res(scname, skyid, skydir, d, gus, outdir):
     save_partial_res(lres, d, 'sky_'+str(skyid), outdir)
 
 def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir):
-    if test_partial_res(d, 'sun_'+str(timeindex.hour)+'H',outdir):
-        return
     s = pgl.Scene(scname)
     cs = toCaribuScene(s)
     print('Sun :',str(timeindex.hour)+'H')
@@ -154,113 +153,60 @@ def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, out
     lres['Entity'] = ['incident']+list(aggsunRc.keys())
     lres[str(timeindex.hour)+'H-DirectRc'] = [1]+list(aggsunRc.values())
     lres[str(timeindex.hour)+'H-DirectRs'] = [1]+aggsunRs
-    save_partial_res(lres, d, 'sun_'+str(timeindex.hour)+'H', outdir)
     return lres,s
 
 def test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir):
+    t = time.time()
     lres, s = partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
+    restime = time.time() - t
     if not os.path.exists(outdir):
         os.mkdir(outdir)
-    print('save bgeom')
-    s.save(os.path.join(outdir,"scene_%i.bgeom" % len(s)))
+    #print('save bgeom')
+    #s.save(os.path.join(outdir,"scene_%i.bgeom" % len(s)))
     csvname = os.path.join(outdir,'result_%sH_%i.csv' % (str(timeindex.hour),len(s)))
     print('save csv')
     print(csvname)
     pandas.DataFrame(lres).to_csv(csvname)
     print('done')
-    os.remove(scname)
-
-def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multiprocessing.cpu_count()+1):
-
-    if not type(sdates) == list:
-        sdates = [sdates]
-
-    resdates = dict()
-    allgus = list(mango.todict().keys())
-    #if gus is None:
-
-    scname = 'tmpscene_%i.bgeom' % randint(0,1000)
-    scene.save(scname)
-
-    pool = multiprocessing.Pool(processes=nbprocesses)
-
-    for d in sdates:
-
-
-        daydate = pandas.Timestamp(d, tz=localisation['timezone'])
-        day_global_horiz_radiation = ghigroup.get_group(daydate)
-        hours = day_global_horiz_radiation.index
-
-        sky_irr = sky_irradiances(ghi=day_global_horiz_radiation, dates=hours, **localisation)
-        # normalised mean sky for the day
-        _, sky = sun_sky_sources(ghi=day_global_horiz_radiation, dates=hours, **localisation)
-
-        sky, _ = normalize_energy(sky)
-
-        for dirid, (az,el,ei) in enumerate(zip(*sky)):
-            if nbprocesses > 1:
-                pool.apply_async(partial_sky_res, args=(scname, dirid, [[az],[el],[ei]], d, gus, outdir))
-            else:
-                partial_sky_res(scname, dirid, [[az],[el],[ei]], d, gus, outdir)
-
-        for timeindex, row in sky_irr.iterrows():
-            if row.dni > 0:
-                global_horizontal_irradiance  = row.ghi
-                diffuse_horizontal_irradiance = row.dhi
-                direct_horizontal_irradiance  = global_horizontal_irradiance - diffuse_horizontal_irradiance
-
-                if nbprocesses > 1:
-                    pool.apply_async(partial_sun_res, args=(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir))
-                else:
-                    partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
-
-        pool.close()
-        pool.join()
-
-        res = dict() 
-        for fname in glob.glob(os.path.join(outdir,'result_%s_*.pkl' % str(d))):
-            lres = pickle.load(open(fname,'rb'))
-            os.remove(fname)
-            res.update(lres)
-        res = pandas.DataFrame(res)
-        if not outdir is None:
-            if not os.path.exists(outdir):
-                os.mkdir(outdir)
-            res.to_csv(os.path.join(outdir,'result_%s.csv' % str(d)))
-        resdates[d] = res
-
-    os.remove(scname)
-
-    return resdates
+    perffilename = os.path.join(outdir,'performance_%sH_%i.csv' % (str(timeindex.hour),len(s)))
+    with open(perffilename,'w') as perffile:
+        perffile.write(str(datetime.datetime.now())+' --> '+str(restime))
 
 from math import *
 
-def test_process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multiprocessing.cpu_count()+1):
+def test_process_caribu(sdates, gus = None, outdir = None, nbprocesses = 1) :#multiprocessing.cpu_count()):
 
     if not type(sdates) == list:
         sdates = [sdates]
 
     resdates = dict()
-    allgus = list(mango.todict().keys())
-    #if gus is None:
-
 
     pool = multiprocessing.Pool(processes=nbprocesses)
 
-    from random import sample
-    nbelem = len(scene)
-    nblogelem = ceil(log(nbelem,10))
-    allsh = [sh for sh in scene]
-    nbelems = [int(min(nbelem,pow(10,i))) for i in range(1, nblogelem+1)]
-    print(nbelems)
-    scenes = [pgl.Scene(sample(allsh,i)) for i in nbelems]
+    datadir = 'benchmark-all'
+    if os.path.exists(datadir):
+        import glob
+        scenes = glob.glob(os.path.join(datadir,'scene_*.bgeom'))
+        scenes.sort()
+        print (scenes)
+    else:
+        from random import sample
+        scene = pgl.Scene('../data/consolidated_mango3d-wd.bgeom')
+        scene = pgl.Scene([sh for sh in mango if sh.id % idshift > 0])
+        nbelem = len(scene)
+        nblogelem = ceil(log(nbelem,10))
+        allsh = [sh for sh in scene]
+        nbelems = [int(min(nbelem,pow(10,i))) for i in range(1, nblogelem+1)]
+        print(nbelems)
+        scenes = [pgl.Scene(sample(allsh,i)) for i in nbelems]
 
     for sc in scenes:
-      scname = 'tmpscene_%i.bgeom' % randint(0,1000)
-      sc.save(scname)
+      if type(sc) != str:
+          scname = os.path.join(datadir,"scene_%i.bgeom" % len(s))
+          sc.save(scname)
+      else:
+          scname = sc
       for d in sdates:
-
-
         daydate = pandas.Timestamp(d, tz=localisation['timezone'])
         day_global_horiz_radiation = ghigroup.get_group(daydate)
         hours = day_global_horiz_radiation.index
@@ -282,10 +228,8 @@ def test_process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = 
     pool.join()
 
 
-    
-
     return resdates
 
 if __name__ == '__main__':
-    mango = pgl.Scene([sh for sh in mango if sh.id % idshift > 0])
-    res = test_process_caribu(mango, targetdate, outdir = 'benchmark-'+sys.platform)
+    
+    res = test_process_caribu(targetdate, outdir = 'benchmark-'+sys.platform)
