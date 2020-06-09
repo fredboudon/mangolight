@@ -156,6 +156,9 @@ def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, out
     return lres,s
 
 def test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir):
+    csvname = os.path.join(outdir,'result_%sH_%i.csv' % (str(timeindex.hour),len(s)))
+    if os.path.exists(csvname):
+        print(repr(csvname)+' already computed.')
     t = time.time()
     lres, s = partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
     restime = time.time() - t
@@ -163,12 +166,11 @@ def test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus
         os.mkdir(outdir)
     #print('save bgeom')
     #s.save(os.path.join(outdir,"scene_%i.bgeom" % len(s)))
-    csvname = os.path.join(outdir,'result_%sH_%i.csv' % (str(timeindex.hour),len(s)))
     print('save csv')
     print(csvname)
     pandas.DataFrame(lres).to_csv(csvname)
     print('done')
-    perffilename = os.path.join(outdir,'performance_%sH_%i.csv' % (str(timeindex.hour),len(s)))
+    perffilename = os.path.join(outdir,'performance_%sH_%i.txt' % (str(timeindex.hour),len(s)))
     with open(perffilename,'w') as perffile:
         perffile.write(str(datetime.datetime.now())+' --> '+str(restime))
 
