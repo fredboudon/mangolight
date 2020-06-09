@@ -156,9 +156,11 @@ def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, out
     return lres,s
 
 def test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir):
-    csvname = os.path.join(outdir,'result_%sH_%i.csv' % (str(timeindex.hour),len(s)))
+    n = os.path.basename(scname).split('_')[1].split('.')[0]
+    csvname = os.path.join(outdir,'result_%sH_%s.csv' % (str(timeindex.hour),n))
     if os.path.exists(csvname):
         print(repr(csvname)+' already computed.')
+        return
     t = time.time()
     lres, s = partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
     restime = time.time() - t
@@ -176,7 +178,7 @@ def test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus
 
 from math import *
 
-def test_process_caribu(sdates, gus = None, outdir = None, nbprocesses = multiprocessing.cpu_count()):
+def test_process_caribu(sdates, gus = None, outdir = None, nbprocesses = 1) :# multiprocessing.cpu_count()):
 
     if not type(sdates) == list:
         sdates = [sdates]
