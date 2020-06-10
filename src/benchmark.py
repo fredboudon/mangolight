@@ -62,24 +62,22 @@ def toCaribuScene(mangoscene, leaf_prop=leaf_prop, wood_prop=wood_prop, idshift=
     return cs
 
 
-def caribu(scene, sun = None, sky = None, view = False, debug = False):
+def caribu(scene, ilight = None, direct = False, debug = False):
     from alinea.caribu.light import light_sources
     print('start caribu...')
     t = time.time()
+    print(ilight)
     print('Create light source', end=' ')
     light = []
-    if not sun is None:
-        light += light_sources(*sun) 
-    if not sky is None:
-        light += light_sources(*sky)
+    light += light_sources(*ilight)
     print('... ',len(light),' sources.')
     scene.setLight(light)
     print('Run caribu')
-    raw, agg = scene.run(direct=False, infinite = True, d_sphere = 60)
-    #raw, agg = scene.run(direct=True) #, infinite = False, d_sphere = 60)
+    if direct is False:
+        raw, agg = scene.run(direct=False, infinite = True, split_face = True, d_sphere = 60)
+    else:
+        raw, agg = scene.run(direct=True, split_face = True) 
     print('made in', time.time() - t)
-    if view : 
-        scene.plot(raw['Ei'])
     return raw, agg
 
 
@@ -106,35 +104,13 @@ def test_partial_res(d, tag, outdir = None):
     fname = os.path.join(outdir,'result_%s_%s.pkl' % (str(d), tag))
     return os.path.exists(fname)
 
-def filter_keys(values, gus):
-    if gus is None : 
+def filter_keys(values):
         return values
-    else:
-        return { i : values.get(i,0) for i in values.keys() if i // idshift in gus }
 
-def filter_res(values, gus):
-    if gus is None : 
+def filter_res(values):
         return list(values.values())
-    else:
-        return [ values.get(i,0) for i in values.keys() if i // idshift in gus ]
 
-def partial_sky_res(scname, skyid, skydir, d, gus, outdir):
-    if test_partial_res(d, 'sky_'+str(skyid),  outdir):
-        return
-    s = pgl.Scene(scname)
-    cs = toCaribuScene(s)
-    ei = skydir[2][0]
-    print('Sky ',skyid,':',*skydir)
-    _, aggsky1 = caribu(cs, None, skydir)
-    aggskyRc = filter_keys(aggsky1['Rc']['Ei'], gus)
-    aggskyRs = filter_res(aggsky1['Rs']['Ei'], gus)
-    lres = dict()
-    lres['Entity'] = ['incident']+list(aggskyRc.keys())
-    lres['DiffusRc-'+str(skyid)] = [ei]+list(aggskyRc.values())
-    lres['DiffusRs-'+str(skyid)] = [ei]+aggskyRs 
-    save_partial_res(lres, d, 'sky_'+str(skyid), outdir)
-
-def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir):
+def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, outdir, direct = False):
     s = pgl.Scene(scname)
     cs = toCaribuScene(s)
     print('Sun :',str(timeindex.hour)+'H')
@@ -146,35 +122,54 @@ def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, out
     #print(direct_horizontal_irradiance)
     suns, _ = normalize_energy(suns)
 
-    _, aggsun = caribu(cs, suns, None)
-    aggsunRc = filter_keys(aggsun['Rc']['Ei'], gus)
-    aggsunRs = filter_res(aggsun['Rs']['Ei'], gus)
+    _, aggsun = caribu(cs, suns, direct = direct)
+    aggsunRc = filter_keys(aggsun['Rc']['Ei'])
+    aggsunRc_sup = filter_res(aggsun['Rc']['Ei_sup'])
+    aggsunRc_inf = filter_res(aggsun['Rc']['Ei_inf'])
+    aggsunRs = filter_res(aggsun['Rs']['Ei'])
+    aggsunRs_sup = filter_res(aggsun['Rs']['Ei_sup'])
+    aggsunRs_inf = filter_res(aggsun['Rs']['Ei_inf'])
+
     lres = dict()
     lres['Entity'] = ['incident']+list(aggsunRc.keys())
     lres[str(timeindex.hour)+'H-DirectRc'] = [1]+list(aggsunRc.values())
     lres[str(timeindex.hour)+'H-DirectRs'] = [1]+aggsunRs
+    lres[str(timeindex.hour)+'H-DirectRc_sup'] = [1]+aggsunRc_sup
+    lres[str(timeindex.hour)+'H-DirectRs_sup'] = [1]+aggsunRs_sup
+    lres[str(timeindex.hour)+'H-DirectRc_inf'] = [1]+aggsunRc_inf
+    lres[str(timeindex.hour)+'H-DirectRs_inf'] = [1]+aggsunRs_inf
     return lres,s
 
-def test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir):
+def test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, outdir):
     n = os.path.basename(scname).split('_')[1].split('.')[0]
     csvname = os.path.join(outdir,'result_%sH_%s.csv' % (str(timeindex.hour),n))
     if os.path.exists(csvname):
         print(repr(csvname)+' already computed.')
-        return
-    t = time.time()
-    lres, s = partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
-    restime = time.time() - t
-    if not os.path.exists(outdir):
-        os.mkdir(outdir)
-    #print('save bgeom')
-    #s.save(os.path.join(outdir,"scene_%i.bgeom" % len(s)))
-    print('save csv')
-    print(csvname)
-    pandas.DataFrame(lres).to_csv(csvname)
-    print('done')
-    perffilename = os.path.join(outdir,'performance_%sH_%i.txt' % (str(timeindex.hour),len(s)))
-    with open(perffilename,'w') as perffile:
-        perffile.write(str(datetime.datetime.now())+' --> '+str(restime))
+    else:
+        t = time.time()
+        lres, s = partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
+        restime = time.time() - t
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
+        print(csvname)
+        pandas.DataFrame(lres).to_csv(csvname)
+        perffilename = os.path.join(outdir,'performance_%sH_%i.txt' % (str(timeindex.hour),len(s)))
+        with open(perffilename,'w') as perffile:
+            perffile.write(str(datetime.datetime.now())+' --> '+str(restime))
+    csvname = os.path.join(outdir,'result_direct_%sH_%s.csv' % (str(timeindex.hour),n))
+    if os.path.exists(csvname):
+        print(repr(csvname)+' already computed.')
+    else:
+        t = time.time()
+        lres, s = partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, outdir, direct = True)
+        restime = time.time() - t
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
+        print(csvname)
+        pandas.DataFrame(lres).to_csv(csvname)
+        perffilename = os.path.join(outdir,'performance_direct_%sH_%i.txt' % (str(timeindex.hour),len(s)))
+        with open(perffilename,'w') as perffile:
+            perffile.write(str(datetime.datetime.now())+' --> '+str(restime))
 
 from math import *
 
@@ -224,9 +219,9 @@ def test_process_caribu(sdates, gus = None, outdir = None, nbprocesses = multipr
                 direct_horizontal_irradiance  = global_horizontal_irradiance - diffuse_horizontal_irradiance
 
                 if nbprocesses > 1:
-                    pool.apply_async(test_partial_sun_res, args=(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir))
+                    pool.apply_async(test_partial_sun_res, args=(scname, timeindex, direct_horizontal_irradiance, d, outdir))
                 else:
-                    test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
+                    test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, outdir)
 
     pool.close()
     pool.join()

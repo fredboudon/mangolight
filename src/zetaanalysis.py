@@ -12,7 +12,7 @@ mango = pgl.Scene('../data/consolidated_mango3d-wd.bgeom')
 
 
 
-def get_data(fname = 'results-rcrs-1000/result_2017-08-26.csv'):
+def get_data(fname = 'results-rcrs-mac/result_2017-08-26.csv'):
     data = pandas.read_csv(fname)
     #data = pandas.read_csv('results_2017-08-26-r60.csv')
     data.drop(columns=['Unnamed: 0'], inplace=True)
@@ -73,7 +73,7 @@ def get_sun_light_direction(day, hour):
     return el[0],az[0]
 
 
-def plot_value(scene, values, data, pattern = None, display = True):
+def plot_value(scene, values, data = None, pattern = None, display = True):
     if type(values) is str:
         vname = values
         #values = data[values]
@@ -87,7 +87,7 @@ def plot_value(scene, values, data, pattern = None, display = True):
     minvalue = values.min()
     print(vname, minvalue, maxvalue)
     mmap = pgl.PglMaterialMap(minvalue, maxvalue)
-    scene = pgl.Scene([pgl.Shape(sh.geometry, mmap(v), int(sid)) for sid, v in values.items() if sid !='incident' for sh in sdict[int(sid)] ])
+    scene = pgl.Scene([pgl.Shape(sh.geometry, mmap(v), int(sid)) for sid, v in values.items() if sid != 'incident' and int(sid) in sdict  for sh in sdict[int(sid)] ])
     scene += mmap.pglrepr()
     if pattern:
         bbx = pgl.BoundingBox(scene)
@@ -199,14 +199,16 @@ def generate_all(outputdir = 'images'):
             #if not res:
             #    break
 
-def plot_all():
+def plot_all(mango, data):
+    from random import sample
+    #mango = pgl.Scene(sample([sh for sh in mango],5000))
     names = sorted(data.columns.values)
     prevc = names[0]
-    scene = plot_value(mango, prevc, display=False)
+    scene = plot_value(mango, prevc, data=data, display=False)
     for c in names[1:]:
         #if not 'Direct' in c and not 'DiffusRc' in c:
             pgl.Viewer.display(scene)
-            scene = plot_value(mango, c, display=False)
+            scene = plot_value(mango, c, data=data, display=False)
             res = pgl.Viewer.dialog.question(prevc,prevc)
             prevc = c
             if not res:
@@ -234,29 +236,38 @@ def plot_benchmark():
 
 def plot_benchmark():
     import glob
-    dirname = 'results-rcrs-testlen60'
-    prefix = os.path.join(dirname,'scene_')
+    dirname = 'benchmark-linux'
+    dirname2 = 'benchmark-darwin'
+    prefix = os.path.join('benchmark-all','scene_')
     #fnames = glob.glob(prefix+'*.bgeom')
-    fnames = [prefix+'29682.bgeom']
+    #fnames = [prefix+'29682.bgeom']
+    fnames = [prefix+'10000.bgeom']
     for fname in sorted(fnames):
         sc = pgl.Scene(fname)
         idn = fname[len(prefix):-6]
         data = pandas.read_csv(os.path.join(dirname,'result_10H_%s.csv' % idn))
         data.drop(columns=['Unnamed: 0'], inplace=True)
         data.set_index('Entity', inplace=True)
-        scd = sc.todict()
-        plot_value(sc,'10H-DirectRc',data=data)
+        data2 = pandas.read_csv(os.path.join(dirname2,'result_10H_%s.csv' % idn))
+        data2.drop(columns=['Unnamed: 0'], inplace=True)
+        data2.set_index('Entity', inplace=True)
+        # plot_value(sc,'10H-DirectRc',data=data)
+        # res = pgl.Viewer.dialog.question('Rc '+idn,'Rc '+idn)
+        # if not res:
+        #     break
+        # plot_value(sc,'10H-DirectRs',data=data)
+        # res = pgl.Viewer.dialog.question('Rs '+idn,'Rs '+idn)
+        # if not res:
+        #     break
+        plot_value(sc,data2['10H-DirectRc']-data['10H-DirectRc'])
         res = pgl.Viewer.dialog.question('Rc '+idn,'Rc '+idn)
-        if not res:
-            break
-        plot_value(sc,'10H-DirectRs',data=data)
-        res = pgl.Viewer.dialog.question('Rs '+idn,'Rs '+idn)
         if not res:
             break
 
 if __name__ == '__main__':
+    plot_all(mango, get_data())
     #generate_all('images-1000')
-    plot_benchmark()
+    #plot_benchmark()
     #rc,rs = generate_rcrs(get_data('results-rcrs-testlen/result_10H_29682.csv'),10)
     #show_mar_relation(rc,rs)
     #rc2,rs2 = generate_rcrs(get_data('results-rcrs-testlen60/result_10H_29682.csv'),10)
