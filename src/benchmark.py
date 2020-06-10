@@ -66,7 +66,6 @@ def caribu(scene, ilight = None, direct = False, debug = False):
     from alinea.caribu.light import light_sources
     print('start caribu...')
     t = time.time()
-    print(ilight)
     print('Create light source', end=' ')
     light = []
     light += light_sources(*ilight)
@@ -147,7 +146,7 @@ def test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, out
         print(repr(csvname)+' already computed.')
     else:
         t = time.time()
-        lres, s = partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
+        lres, s = partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, outdir)
         restime = time.time() - t
         if not os.path.exists(outdir):
             os.mkdir(outdir)
@@ -173,7 +172,7 @@ def test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, out
 
 from math import *
 
-def test_process_caribu(sdates, gus = None, outdir = None, nbprocesses = multiprocessing.cpu_count()):
+def test_process_caribu(sdates, outdir = None, nbprocesses = multiprocessing.cpu_count()):
 
     if not type(sdates) == list:
         sdates = [sdates]
