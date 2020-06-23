@@ -62,7 +62,7 @@ def toCaribuScene(mangoscene, leaf_prop=leaf_prop, wood_prop=wood_prop, idshift=
     return cs
 
 
-def caribu(scene, ilight = None, direct = False, debug = False):
+def caribu(scene, ilight = None, direct = False, d_sphere = 60, debug = False):
     from alinea.caribu.light import light_sources
     print('start caribu...')
     t = time.time()
@@ -73,7 +73,7 @@ def caribu(scene, ilight = None, direct = False, debug = False):
     scene.setLight(light)
     print('Run caribu')
     if direct is False:
-        raw, agg = scene.run(direct=False, infinite = True, split_face = True, d_sphere = 60)
+        raw, agg = scene.run(direct=False, infinite = True, split_face = True, d_sphere = d_sphere)
     else:
         raw, agg = scene.run(direct=True, split_face = True) 
     print('made in', time.time() - t)
@@ -109,7 +109,7 @@ def filter_keys(values):
 def filter_res(values):
         return list(values.values())
 
-def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, outdir, direct = False):
+def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, outdir, direct = False, d_sphere = 60):
     s = pgl.Scene(scname)
     cs = toCaribuScene(s)
     print('Sun :',str(timeindex.hour)+'H')
@@ -121,7 +121,7 @@ def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, outdir, 
     #print(direct_horizontal_irradiance)
     suns, _ = normalize_energy(suns)
 
-    _, aggsun = caribu(cs, suns, direct = direct)
+    _, aggsun = caribu(cs, suns, direct = direct, d_sphere = d_sphere)
     aggsunRc = filter_keys(aggsun['Rc']['Ei'])
     aggsunRc_sup = filter_res(aggsun['Rc']['Ei_sup'])
     aggsunRc_inf = filter_res(aggsun['Rc']['Ei_inf'])
@@ -139,14 +139,14 @@ def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, outdir, 
     lres[str(timeindex.hour)+'H-DirectRs_inf'] = [1]+aggsunRs_inf
     return lres,s
 
-def test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, outdir):
+def test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, outdir):
     n = os.path.basename(scname).split('_')[1].split('.')[0]
     csvname = os.path.join(outdir,'result_%sH_%s.csv' % (str(timeindex.hour),n))
     if os.path.exists(csvname):
         print(repr(csvname)+' already computed.')
     else:
         t = time.time()
-        lres, s = partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, outdir)
+        lres, s = partial_sun_res(scname, timeindex, direct_horizontal_irradiance, outdir)
         restime = time.time() - t
         if not os.path.exists(outdir):
             os.mkdir(outdir)
@@ -160,13 +160,32 @@ def test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, out
         print(repr(csvname)+' already computed.')
     else:
         t = time.time()
-        lres, s = partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, outdir, direct = True)
+        lres, s = partial_sun_res(scname, timeindex, direct_horizontal_irradiance, outdir, direct = True)
         restime = time.time() - t
         if not os.path.exists(outdir):
             os.mkdir(outdir)
         print(csvname)
         pandas.DataFrame(lres).to_csv(csvname)
         perffilename = os.path.join(outdir,'performance_direct_%sH_%i.txt' % (str(timeindex.hour),len(s)))
+        with open(perffilename,'w') as perffile:
+            perffile.write(str(datetime.datetime.now())+' --> '+str(restime))
+
+def test_partial_sun_res_dsphere(timeindex, direct_horizontal_irradiance, outdir, d_sphere = 60):
+    scene = pgl.Scene('../data/consolidated_mango3d-wd.bgeom')
+    scene = pgl.Scene([sh for sh in scene if sh.id % idshift > 0])
+    n = len(scene)
+    csvname = os.path.join(outdir,'result_%sH_%s_ds%i.csv' % (str(timeindex.hour), n, d_sphere))
+    if os.path.exists(csvname):
+        print(repr(csvname)+' already computed.')
+    else:
+        t = time.time()
+        lres, s = partial_sun_res(scene, timeindex, direct_horizontal_irradiance, outdir, d_sphere = d_sphere)
+        restime = time.time() - t
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
+        print(csvname)
+        pandas.DataFrame(lres).to_csv(csvname)
+        perffilename = os.path.join(outdir,'performance_%sH_%i_ds%i.txt' % (str(timeindex.hour),len(s), d_sphere))
         with open(perffilename,'w') as perffile:
             perffile.write(str(datetime.datetime.now())+' --> '+str(restime))
 
@@ -218,9 +237,9 @@ def test_process_caribu(sdates, outdir = None, nbprocesses = multiprocessing.cpu
                 direct_horizontal_irradiance  = global_horizontal_irradiance - diffuse_horizontal_irradiance
 
                 if nbprocesses > 1:
-                    pool.apply_async(test_partial_sun_res, args=(scname, timeindex, direct_horizontal_irradiance, d, outdir))
+                    pool.apply_async(test_partial_sun_res, args=(scname, timeindex, direct_horizontal_irradiance, outdir))
                 else:
-                    test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, outdir)
+                    test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, outdir)
 
     pool.close()
     pool.join()
@@ -228,6 +247,45 @@ def test_process_caribu(sdates, outdir = None, nbprocesses = multiprocessing.cpu
 
     return resdates
 
+
+def test_process_caribu_dsphere(sdates, outdir = None, nbprocesses = multiprocessing.cpu_count()):
+
+    if not type(sdates) == list:
+        sdates = [sdates]
+
+    resdates = dict()
+
+    pool = multiprocessing.Pool(processes=nbprocesses)
+
+    scname = '../data/consolidated_mango3d-wd.bgeom'
+    #scene = pgl.Scene(scname)
+    #scene = pgl.Scene([sh for sh in mango if sh.id % idshift > 0])
+
+    for d in sdates:
+        daydate = pandas.Timestamp(d, tz=localisation['timezone'])
+        day_global_horiz_radiation = ghigroup.get_group(daydate)
+        hours = day_global_horiz_radiation.index
+
+        sky_irr = sky_irradiances(ghi=day_global_horiz_radiation, dates=hours, **localisation)
+  
+        for timeindex, row in sky_irr.iterrows():
+            if row.dni > 0 and timeindex.hour == 10:
+                global_horizontal_irradiance  = row.ghi
+                diffuse_horizontal_irradiance = row.dhi
+                direct_horizontal_irradiance  = global_horizontal_irradiance - diffuse_horizontal_irradiance
+
+                for d_sphere in range(0,60,10):
+                    if nbprocesses > 1:
+                        pool.apply_async(test_partial_sun_res_dsphere, args=(timeindex, direct_horizontal_irradiance, outdir, d_sphere))
+                    else:
+                        test_partial_sun_res_dsphere(timeindex, direct_horizontal_irradiance, outdir, d_sphere)
+
+    pool.close()
+    pool.join()
+
+
+    return resdates
 if __name__ == '__main__':
     
-    res = test_process_caribu(targetdate, outdir = 'benchmark-'+sys.platform)
+    #res = test_process_caribu(targetdate, outdir = 'benchmark-'+sys.platform)
+    res = test_process_caribu_dsphere(targetdate, outdir = 'benchmark-'+sys.platform)

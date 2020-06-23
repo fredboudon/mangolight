@@ -28,9 +28,14 @@ def get_data(fname = 'results-rcrs-mac/result_2017-08-26.csv'):
             data.rename(columns={str(i)+'H-DirectRs': '0'+str(i)+'H-DirectRs' for i in range(10)}, inplace = True)
     return data        
 
-# Y represent the North
+# -X represent the North
 
-def generate_rcrs(data, hour=12, rcdirectei = 1, rsdirectei = 1, rcdiffuseei = 1, rsdiffuseei = 1):
+ratiovalues = [0.0404, 0.0348, 0.0248, 0.0173]
+meanratio = numpy.mean(ratiovalues)
+ratiovalues = [v/meanratio for v in  ratiovalues]
+rcdirectei, rsdirectei, rcdiffuseei, rsdiffuseei = ratiovalues
+
+def generate_rcrs(data, hour=12, rcdirectei = rcdirectei, rsdirectei = rsdirectei, rcdiffuseei = rcdiffuseei, rsdiffuseei = rsdiffuseei):
 
     diffusrcname = [name for name in data.columns.values if 'DiffusRc' in name]
     diffusrsname = [name for name in data.columns.values if 'DiffusRc' in name]
@@ -46,8 +51,8 @@ def generate_rcrs(data, hour=12, rcdirectei = 1, rsdirectei = 1, rcdiffuseei = 1
         diffusrs *= rsdiffuseei
 
     if len(directrcname) > 0 :
-        directrc = data[str(hour)+'H-DirectRc']*rcdirectei
-        directrs = data[str(hour)+'H-DirectRs']*rsdirectei
+        directrc = data[str(hour).zfill(2)+'H-DirectRc']*rcdirectei
+        directrs = data[str(hour).zfill(2)+'H-DirectRs']*rsdirectei
         if len(diffusrcname) == 0:
             return directrc,directrs
     else:
@@ -57,6 +62,20 @@ def generate_rcrs(data, hour=12, rcdirectei = 1, rsdirectei = 1, rcdiffuseei = 1
     rs = diffusrs+directrs
 
     return rc,rs
+
+def show_mar_relation( data, hour=None):
+    import matplotlib.pyplot as plt
+    if hour is None:
+        for h in range(17,8,-1):
+            rc,rs = generate_rcrs(data,h)
+            plt.plot(rc,rc/rs,'.', label=str(h).zfill(2)+'H')
+    else:
+        rc,rs = generate_rcrs(data,hour)
+        plt.plot(rc,rc/rs,'.', label=str(hour).zfill(2)+'H')
+    #plt.ylim((-10,40))
+    plt.legend()
+    plt.show()
+
 
 #rc,rs = generate_rcrs(data)
 
@@ -73,7 +92,7 @@ def get_sun_light_direction(day, hour):
     return el[0],az[0]
 
 
-def plot_value(scene, values, data = None, pattern = None, display = True):
+def plot_value(scene, values, data = None, pattern = None, display = True, minvalue = None, maxvalue = None):
     if type(values) is str:
         vname = values
         #values = data[values]
@@ -83,12 +102,14 @@ def plot_value(scene, values, data = None, pattern = None, display = True):
         vname = None
     bbx = None
     sdict = scene.todict()
-    maxvalue = values.max()
-    minvalue = values.min()
+    if maxvalue is None:
+        maxvalue = values.max()
+    if minvalue is None:
+        minvalue = values.min()
     print(vname, minvalue, maxvalue)
     mmap = pgl.PglMaterialMap(minvalue, maxvalue)
-    scene = pgl.Scene([pgl.Shape(sh.geometry, mmap(v), int(sid)) for sid, v in values.items() if sid != 'incident' and int(sid) in sdict  for sh in sdict[int(sid)] ])
-    scene += mmap.pglrepr()
+    scene = pgl.Scene([pgl.Shape(sh.geometry, mmap(v), int(sid)) for sid, v in values.items() if sid != 'incident' and int(sid) in sdict and minvalue <= v <= maxvalue  for sh in sdict[int(sid)] ])
+    #scene += mmap.pglrepr()
     if pattern:
         bbx = pgl.BoundingBox(scene)
         zmin, zmax = bbx.lowerLeftCorner.z,bbx.upperRightCorner.z
@@ -108,8 +129,20 @@ def plot_value(scene, values, data = None, pattern = None, display = True):
         el, az = source_dir
         print(az, el)
         dist = 1.15*pgl.norm(bbx.getSize())
-        pgldir = pgl.Vector3.Spherical(dist,radians(az-90),radians(90-el))
+        azel2pos = lambda az,el : pgl.Vector3.Spherical(dist,radians(-az),radians(90-el))
+        pgldir = azel2pos(az,el)
         scene.add(pgl.Translated(pgldir,pgl.Sphere(dist/50)))
+        if 'Direct' in vname:
+            for hour in range(8,19):
+                el, az = get_sun_light_direction(date, hour)
+                pgldir = azel2pos(az,el)
+                scene.add(pgl.Shape(pgl.Translated(pgldir,pgl.Sphere(dist/80)), pgl.Material((0,0,0))))
+        else:
+            for dirid in range(46):
+                el, az = get_sky_light_direction(dirid)
+                pgldir = azel2pos(az,el)
+                scene.add(pgl.Shape(pgl.Translated(pgldir,pgl.Sphere(dist/80)), pgl.Material((0,0,0))))
+
     if display:
         pgl.Viewer.display(scene)
     return scene
@@ -117,11 +150,6 @@ def plot_value(scene, values, data = None, pattern = None, display = True):
 
 
 #
-def show_mar_relation( rc, rs):
-    import matplotlib.pyplot as plt
-    plt.plot(rc,rc/rs,'.')
-    #plt.ylim((-10,40))
-    plt.show()
 
 
 def compare_mar_relation( rc, rs, rc2, rs2):
@@ -204,15 +232,31 @@ def plot_all(mango, data):
     #mango = pgl.Scene(sample([sh for sh in mango],5000))
     names = sorted(data.columns.values)
     prevc = names[0]
-    scene = plot_value(mango, prevc, data=data, display=False)
+    scene = plot_value(mango, prevc, data=data, display=False, minvalue = 0.5)
     for c in names[1:]:
         #if not 'Direct' in c and not 'DiffusRc' in c:
             pgl.Viewer.display(scene)
-            scene = plot_value(mango, c, data=data, display=False)
+            scene = plot_value(mango, c, data=data, display=False, minvalue = 0.5)
             res = pgl.Viewer.dialog.question(prevc,prevc)
             prevc = c
             if not res:
                 break
+
+def save_all_image(mango, data, outdir = 'images-res'):
+    from random import sample
+    #mango = pgl.Scene(sample([sh for sh in mango],5000))
+    names = sorted(data.columns.values)
+    firstc = names[0]
+    scene = plot_value(mango, firstc, data=data, display=False)
+    pgl.Viewer.display(scene)
+    res = pgl.Viewer.dialog.question("Setup","Please fix view and display mode.")
+    pgl.Viewer.saveSnapshot(os.path.join(outdir,firstc+'.png'))
+    if not res:
+        return
+    for c in names[1:]:
+            scene = plot_value(mango, c, data=data, display=False)
+            pgl.Viewer.display(scene)
+            pgl.Viewer.saveSnapshot(os.path.join(outdir,c+'.png'),'PNG')
 
 def plot_benchmark():
     import glob
@@ -265,10 +309,13 @@ def plot_benchmark():
             break
 
 if __name__ == '__main__':
-    plot_all(mango, get_data())
+    import sys
+    #plot_all(mango, get_data())
+    #save_all_image(mango, get_data())
     #generate_all('images-1000')
     #plot_benchmark()
     #rc,rs = generate_rcrs(get_data('results-rcrs-testlen/result_10H_29682.csv'),10)
     #show_mar_relation(rc,rs)
     #rc2,rs2 = generate_rcrs(get_data('results-rcrs-testlen60/result_10H_29682.csv'),10)
     #compare_mar_relation(rc,rs,rc2,rs2)    
+    show_mar_relation(get_data(),sys.argv[1] if len(sys.argv)>1 else None)

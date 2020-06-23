@@ -1,11 +1,13 @@
 
 import pandas
 import openalea.plantgl.all as pgl
+from openalea.plantgl.all import *
 from alinea.astk.sun_and_sky import sun_sky_sources, sun_sources
 from alinea.astk.meteorology.sky_irradiance import sky_irradiances
 from lightsimulator import *
 from measuredlight import *
-import os
+from math import *
+import os, sys
 
 DEBUG = False
 
@@ -24,13 +26,24 @@ mindate, maxdate = min(measuredates), max(measuredates)
 mango = pgl.Scene('../data/consolidated_mango3d-wd.bgeom')
 idshift = 1000
 
+axis, north = (0,0,1), -(90-53)
+mango = Scene([Shape(AxisRotated(axis,radians(-north),sh.geometry),sh.appearance,sh.id,sh.parentId) for sh in mango])
+
 global_horiz_irradiance = meteo.loc[measuredates,'global_radiation']
 ghigroup = global_horiz_irradiance.groupby(pandas.Grouper(freq='D'))
 
 # Reflectance_Up, Transmittance_Up, Reflectance_Down, Transmittance_Down
-leaf_prop = { 'Rc' : (0.05015, 0.0116, 0.0782, 0.01215), 'Rs' : (0.388, 0.3577, 0.43255, 0.35595)}
+leaf_prop = { 'Rc' : (0.05015, 0.0116, 0.0782, 0.01215), 
+              'Rs' : (0.388, 0.3577, 0.43255, 0.35595),
+              'PAR' : (0.069039866, 0.117477242, 0.036254034, 0.03668661) }
 wood_prop = { 'Rc' : (0.0001, 0.0001), 'Rs' : (0.0001, 0.0001)}
 
+xcenter, ycenter = -21,   -40
+xsize,   ysize   = 250+7, 300
+xmin, xmax = -xcenter-xsize, -xcenter+xsize
+ymin, ymax = -ycenter-ysize,-ycenter+ysize
+
+D_SPHERE = 60
 
 def get_dates():
     import glob
@@ -57,7 +70,7 @@ def toCaribuScene(mangoscene = mango, leaf_prop=leaf_prop, wood_prop=wood_prop, 
     for vid in geomdict:
         for rv in ['Rc','Rs']:
             opt[rv][vid] = (wood_prop if (vid % idshift) == 0 else leaf_prop)[rv]
-    cs = CaribuScene(mangoscene, opt=opt, scene_unit='cm', pattern=(-230,-245,320,290), debug = DEBUG)
+    cs = CaribuScene(mangoscene, opt=opt, scene_unit='cm', pattern=(xmin,ymin,xmax,ymax), debug = DEBUG)
     print('done in', time.time() - t)
     return cs
 
@@ -69,13 +82,13 @@ def caribu(scene, sun = None, sky = None, view = False, debug = False):
     print('Create light source', end=' ')
     light = []
     if not sun is None:
-        light += light_sources(*sun) 
+        light += light_sources(*sun, orientation = north) 
     if not sky is None:
-        light += light_sources(*sky)
+        light += light_sources(*sky, orientation = north)
     print('... ',len(light),' sources.')
     scene.setLight(light)
     print('Run caribu')
-    raw, agg = scene.run(direct=False, infinite = True, d_sphere = 60)
+    raw, agg = scene.run(direct=False, infinite = True, d_sphere = D_SPHERE)
     #raw, agg = scene.run(direct=True) #, infinite = False, d_sphere = 60)
     print('made in', time.time() - t)
     if view : 
@@ -118,6 +131,16 @@ def filter_res(values, gus):
     else:
         return [ values.get(i,0) for i in values.keys() if i // idshift in gus ]
 
+def generate_dataframe_data(aggregatedResults, name, ei, gus):
+    aggRc = filter_keys(aggregatedResults['Rc']['Ei'], gus)
+    lres = dict()
+    lres['Entity'] = ['incident']+list(aggRc.keys())
+    for wavelength in ['Rc','Rs','PAR']:
+        for result in ['Ei','Ei_sup','Ei_inf','Eabs']:
+            res = filter_res(aggregatedResults[wavelength][result], gus)
+            lres[name+'-'+wavelength+'-'+result] = [ei]+list(res.values())
+    return lres
+
 def partial_sky_res(scname, skyid, skydir, d, gus, outdir):
     if test_partial_res(d, 'sky_'+str(skyid),  outdir):
         return
@@ -126,12 +149,7 @@ def partial_sky_res(scname, skyid, skydir, d, gus, outdir):
     ei = skydir[2][0]
     print('Sky ',skyid,':',*skydir)
     _, aggsky1 = caribu(cs, None, skydir)
-    aggskyRc = filter_keys(aggsky1['Rc']['Ei'], gus)
-    aggskyRs = filter_res(aggsky1['Rs']['Ei'], gus)
-    lres = dict()
-    lres['Entity'] = ['incident']+list(aggskyRc.keys())
-    lres['DiffusRc-'+str(skyid)] = [ei]+list(aggskyRc.values())
-    lres['DiffusRs-'+str(skyid)] = [ei]+aggskyRs 
+    lres = generate_dataframe_data(aggsky1, 'Diffus-'+str(skyid).zfill(2), ei, gus)
     save_partial_res(lres, d, 'sky_'+str(skyid), outdir)
 
 def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir):
@@ -149,29 +167,12 @@ def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, out
     suns, _ = normalize_energy(suns)
 
     _, aggsun = caribu(cs, suns, None)
-    aggsunRc = filter_keys(aggsun['Rc']['Ei'], gus)
-    aggsunRs = filter_res(aggsun['Rs']['Ei'], gus)
-    lres = dict()
-    lres['Entity'] = ['incident']+list(aggsunRc.keys())
-    lres[str(timeindex.hour)+'H-DirectRc'] = [1]+list(aggsunRc.values())
-    lres[str(timeindex.hour)+'H-DirectRs'] = [1]+aggsunRs
+    lres = generate_dataframe_data(aggsun, 'Direct-'+str(skyid).zfill(2)+'H', 1, gus)
     save_partial_res(lres, d, 'sun_'+str(timeindex.hour)+'H', outdir)
     return lres,s
 
-def test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir):
-    lres, s = partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
-    if not os.path.exists(outdir):
-        os.mkdir(outdir)
-    print('save bgeom')
-    s.save(os.path.join(outdir,"scene_%i.bgeom" % len(s)))
-    csvname = os.path.join(outdir,'result_%sH_%i.csv' % (str(timeindex.hour),len(s)))
-    print('save csv')
-    print(csvname)
-    pandas.DataFrame(lres).to_csv(csvname)
-    print('done')
-    os.remove(scname)
 
-def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multiprocessing.cpu_count()+1):
+def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multiprocessing.cpu_count()):
 
     if not type(sdates) == list:
         sdates = [sdates]
@@ -186,7 +187,6 @@ def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multi
     pool = multiprocessing.Pool(processes=nbprocesses)
 
     for d in sdates:
-
 
         daydate = pandas.Timestamp(d, tz=localisation['timezone'])
         day_global_horiz_radiation = ghigroup.get_group(daydate)
@@ -234,58 +234,6 @@ def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multi
 
     return resdates
 
-from math import *
-
-def test_process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multiprocessing.cpu_count()+1):
-
-    if not type(sdates) == list:
-        sdates = [sdates]
-
-    resdates = dict()
-    allgus = list(mango.todict().keys())
-    #if gus is None:
-
-
-    pool = multiprocessing.Pool(processes=nbprocesses)
-
-    from random import sample
-    nbelem = len(scene)
-    nblogelem = ceil(log(nbelem,10))
-    allsh = [sh for sh in scene]
-    nbelems = [int(min(nbelem,pow(10,i))) for i in range(1, nblogelem+1)]
-    print(nbelems)
-    scenes = [pgl.Scene(sample(allsh,i)) for i in nbelems]
-
-    for sc in scenes:
-      scname = 'tmpscene_%i.bgeom' % randint(0,1000)
-      sc.save(scname)
-      for d in sdates:
-
-
-        daydate = pandas.Timestamp(d, tz=localisation['timezone'])
-        day_global_horiz_radiation = ghigroup.get_group(daydate)
-        hours = day_global_horiz_radiation.index
-
-        sky_irr = sky_irradiances(ghi=day_global_horiz_radiation, dates=hours, **localisation)
-  
-        for timeindex, row in sky_irr.iterrows():
-            if row.dni > 0 and timeindex.hour == 10:
-                global_horizontal_irradiance  = row.ghi
-                diffuse_horizontal_irradiance = row.dhi
-                direct_horizontal_irradiance  = global_horizontal_irradiance - diffuse_horizontal_irradiance
-
-                if nbprocesses > 1:
-                    pool.apply_async(test_partial_sun_res, args=(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir))
-                else:
-                    test_partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
-
-    pool.close()
-    pool.join()
-
-
-    
-
-    return resdates
 
 if __name__ == '__main__':
     mango = pgl.Scene([sh for sh in mango if sh.id % idshift > 0])
@@ -293,5 +241,5 @@ if __name__ == '__main__':
     #mango = sample(mango,1000)
     #mango = pgl.Scene(mango)
     #pgl.Viewer.display(mango)
-    res = process_caribu(mango, targetdate, outdir = 'results-rcrs-mac')
+    res = process_caribu(mango, targetdate, outdir = 'results-rcrs-'+str(D_SPHERE)+'-'+sys.platform)
     #process_quasimc(mango)

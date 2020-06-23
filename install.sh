@@ -8,8 +8,8 @@ conda config --set always_yes yes
 conda config --add channels fredboudon 
 conda config --add channels conda-forge
 source activate
+conda init bash
 conda create -n mangolight openalea.plantgl openalea.mtg alinea.caribu alinea.astk
-conda activate mangolight
 git clone https://github.com/fredboudon/mangolight.git
 cd mangolight/src
 screen -S mangolight 
