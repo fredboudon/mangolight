@@ -89,7 +89,7 @@ def caribu(scene, sun = None, sky = None, view = False, debug = False):
     scene.setLight(light)
     print('Run caribu')
     raw, agg = scene.run(direct=False, infinite = True, d_sphere = D_SPHERE)
-    #raw, agg = scene.run(direct=True) #, infinite = False, d_sphere = 60)
+    #raw, agg = scene.run(direct=True)
     print('made in', time.time() - t)
     if view : 
         scene.plot(raw['Ei'])
@@ -111,6 +111,7 @@ from os.path import join
 def save_partial_res(res, d, tag, outdir = None):
     if not os.path.exists(outdir):
         os.mkdir(outdir)
+    pandas.DataFrame(res).to_csv(os.path.join(outdir,'result_%s_%s.csv' % str(d)))
     fname = os.path.join(outdir,'result_%s_%s.pkl' % (str(d), tag))
     stream = open(fname,'wb')
     pickle.dump(res, stream)
@@ -121,9 +122,9 @@ def test_partial_res(d, tag, outdir = None):
 
 def filter_keys(values, gus):
     if gus is None : 
-        return values
+        return list(values.keys())
     else:
-        return { i : values.get(i,0) for i in values.keys() if i // idshift in gus }
+        return [ i for i in values.keys() if i // idshift in gus ]
 
 def filter_res(values, gus):
     if gus is None : 
@@ -134,11 +135,11 @@ def filter_res(values, gus):
 def generate_dataframe_data(aggregatedResults, name, ei, gus):
     aggRc = filter_keys(aggregatedResults['Rc']['Ei'], gus)
     lres = dict()
-    lres['Entity'] = ['incident']+list(aggRc.keys())
+    lres['Entity'] = ['incident']+list(aggRc)
     for wavelength in ['Rc','Rs','PAR']:
         for result in ['Ei','Ei_sup','Ei_inf','Eabs']:
             res = filter_res(aggregatedResults[wavelength][result], gus)
-            lres[name+'-'+wavelength+'-'+result] = [ei]+list(res.values())
+            lres[name+'-'+wavelength+'-'+result] = [ei]+res
     return lres
 
 def partial_sky_res(scname, skyid, skydir, d, gus, outdir):
@@ -169,10 +170,11 @@ def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, out
     _, aggsun = caribu(cs, suns, None)
     lres = generate_dataframe_data(aggsun, 'Direct-'+str(skyid).zfill(2)+'H', 1, gus)
     save_partial_res(lres, d, 'sun_'+str(timeindex.hour)+'H', outdir)
-    return lres,s
 
 
 def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multiprocessing.cpu_count()):
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
 
     if not type(sdates) == list:
         sdates = [sdates]
@@ -205,15 +207,15 @@ def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multi
                 partial_sky_res(scname, dirid, [[az],[el],[ei]], d, gus, outdir)
 
         for timeindex, row in sky_irr.iterrows():
-            if row.dni > 0:
-                global_horizontal_irradiance  = row.ghi
-                diffuse_horizontal_irradiance = row.dhi
-                direct_horizontal_irradiance  = global_horizontal_irradiance - diffuse_horizontal_irradiance
+           if row.dni > 0:
+               global_horizontal_irradiance  = row.ghi
+               diffuse_horizontal_irradiance = row.dhi
+               direct_horizontal_irradiance  = global_horizontal_irradiance - diffuse_horizontal_irradiance
 
-                if nbprocesses > 1:
-                    pool.apply_async(partial_sun_res, args=(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir))
-                else:
-                    partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
+               if nbprocesses > 1:
+                   pool.apply_async(partial_sun_res, args=(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir))
+               else:
+                   partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
 
         pool.close()
         pool.join()
@@ -241,5 +243,5 @@ if __name__ == '__main__':
     #mango = sample(mango,1000)
     #mango = pgl.Scene(mango)
     #pgl.Viewer.display(mango)
-    res = process_caribu(mango, targetdate, outdir = 'results-rcrs-'+str(D_SPHERE)+'-'+sys.platform)
+    res = process_caribu(mango, targetdate, outdir = 'results-rcrs-test-'+str(D_SPHERE)+'-'+sys.platform)
     #process_quasimc(mango)
