@@ -111,7 +111,7 @@ from os.path import join
 def save_partial_res(res, d, tag, outdir = None):
     if not os.path.exists(outdir):
         os.mkdir(outdir)
-    pandas.DataFrame(res).to_csv(os.path.join(outdir,'result_%s_%s.csv' % str(d)))
+    pandas.DataFrame(res).to_csv(os.path.join(outdir,'partial_result_%s_%s.csv' % str(d)))
     fname = os.path.join(outdir,'result_%s_%s.pkl' % (str(d), tag))
     stream = open(fname,'wb')
     pickle.dump(res, stream)
@@ -243,5 +243,5 @@ if __name__ == '__main__':
     #mango = sample(mango,1000)
     #mango = pgl.Scene(mango)
     #pgl.Viewer.display(mango)
-    res = process_caribu(mango, targetdate, outdir = 'results-rcrs-test-'+str(D_SPHERE)+'-'+sys.platform)
+    res = process_caribu(mango, targetdate, outdir = 'results-rcrs-'+str(D_SPHERE)+'-'+sys.platform)
     #process_quasimc(mango)

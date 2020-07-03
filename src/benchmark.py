@@ -274,7 +274,7 @@ def test_process_caribu_dsphere(sdates, outdir = None, nbprocesses = multiproces
                 diffuse_horizontal_irradiance = row.dhi
                 direct_horizontal_irradiance  = global_horizontal_irradiance - diffuse_horizontal_irradiance
 
-                for d_sphere in range(0,60,10):
+                for d_sphere in range(80,201,20):
                     if nbprocesses > 1:
                         pool.apply_async(test_partial_sun_res_dsphere, args=(timeindex, direct_horizontal_irradiance, outdir, d_sphere))
                     else:
