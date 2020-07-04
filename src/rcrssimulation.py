@@ -36,7 +36,7 @@ ghigroup = global_horiz_irradiance.groupby(pandas.Grouper(freq='D'))
 leaf_prop = { 'Rc' : (0.05015, 0.0116, 0.0782, 0.01215), 
               'Rs' : (0.388, 0.3577, 0.43255, 0.35595),
               'PAR' : (0.069039866, 0.117477242, 0.036254034, 0.03668661) }
-wood_prop = { 'Rc' : (0.0001, 0.0001), 'Rs' : (0.0001, 0.0001)}
+wood_prop = { 'Rc' : (0.0001, 0.0001), 'Rs' : (0.0001, 0.0001), 'PAR' : (0.0001, 0.0001)}
 
 xcenter, ycenter = -21,   -40
 xsize,   ysize   = 250+7, 300
@@ -66,9 +66,10 @@ def toCaribuScene(mangoscene = mango, leaf_prop=leaf_prop, wood_prop=wood_prop, 
     print ('Convert scene for caribu')
     t = time.time()
     geomdict = set([sh.id for sh in mangoscene])
-    opt = { 'Rc' : {}, 'Rs' : {}}
+    wavelenghts = list(leaf_prop.keys())
+    opt = dict([(k,{}) for k in wavelenghts])
     for vid in geomdict:
-        for rv in ['Rc','Rs']:
+        for rv in wavelenghts:
             opt[rv][vid] = (wood_prop if (vid % idshift) == 0 else leaf_prop)[rv]
     cs = CaribuScene(mangoscene, opt=opt, scene_unit='cm', pattern=(xmin,ymin,xmax,ymax), debug = DEBUG)
     print('done in', time.time() - t)
@@ -88,7 +89,7 @@ def caribu(scene, sun = None, sky = None, view = False, debug = False):
     print('... ',len(light),' sources.')
     scene.setLight(light)
     print('Run caribu')
-    raw, agg = scene.run(direct=False, infinite = True, d_sphere = D_SPHERE)
+    raw, agg = scene.run(direct=False, infinite = True, split_face = True, d_sphere = D_SPHERE)
     #raw, agg = scene.run(direct=True)
     print('made in', time.time() - t)
     if view : 
@@ -111,7 +112,7 @@ from os.path import join
 def save_partial_res(res, d, tag, outdir = None):
     if not os.path.exists(outdir):
         os.mkdir(outdir)
-    pandas.DataFrame(res).to_csv(os.path.join(outdir,'partial_result_%s_%s.csv' % str(d)))
+    pandas.DataFrame(res).to_csv(os.path.join(outdir,'partial_result_%s_%s.csv' % (str(d), tag)))
     fname = os.path.join(outdir,'result_%s_%s.pkl' % (str(d), tag))
     stream = open(fname,'wb')
     pickle.dump(res, stream)
@@ -238,10 +239,17 @@ def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multi
 
 
 if __name__ == '__main__':
+    import sys
+    if len(sys.argv) > 1:
+        nbproc = int(sys.argv[1])
+    else:
+        nbproc = multiprocessing.cpu_count()
+    if len(sys.argv) > 2:
+        D_SPHERE = int(sys.argv[2])
     mango = pgl.Scene([sh for sh in mango if sh.id % idshift > 0])
     from random import sample
     #mango = sample(mango,1000)
     #mango = pgl.Scene(mango)
     #pgl.Viewer.display(mango)
-    res = process_caribu(mango, targetdate, outdir = 'results-rcrs-'+str(D_SPHERE)+'-'+sys.platform)
+    res = process_caribu(mango, targetdate, outdir = 'results-rcrs-'+str(D_SPHERE)+'-'+sys.platform, nbprocesses = nbproc)
     #process_quasimc(mango)
