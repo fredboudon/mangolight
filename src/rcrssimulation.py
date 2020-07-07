@@ -118,7 +118,7 @@ def save_partial_res(res, d, tag, outdir = None):
     pickle.dump(res, stream)
 
 def test_partial_res(d, tag, outdir = None):
-    fname = os.path.join(outdir,'result_%s_%s.pkl' % (str(d), tag))
+    fname = os.path.join(outdir,'partial_result_%s_%s.csv' % (str(d), tag))
     return os.path.exists(fname)
 
 def filter_keys(values, gus):
@@ -169,7 +169,7 @@ def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, out
     suns, _ = normalize_energy(suns)
 
     _, aggsun = caribu(cs, suns, None)
-    lres = generate_dataframe_data(aggsun, 'Direct-'+str(skyid).zfill(2)+'H', 1, gus)
+    lres = generate_dataframe_data(aggsun, 'Direct-'+str(timeindex.hour).zfill(2)+'H', 1, gus)
     save_partial_res(lres, d, 'sun_'+str(timeindex.hour)+'H', outdir)
 
 
