@@ -60,7 +60,7 @@ def get_dates():
     return alldates
 
 targetdate = ['2017-08-26']
-targetdates = ['2017-%s-%s' % (str(month).zfill(2), str(day).zfill(2)) for month in range(1,13) for day in [1,15]]  
+targetdates = ['2017-%s-%s' % (str(month).zfill(2), str(day).zfill(2)) for month in range(1,13) for day in [8,22]]  
 
 def toCaribuScene(mangoscene = mango, leaf_prop=leaf_prop, wood_prop=wood_prop, idshift=idshift) :
     from alinea.caribu.CaribuScene import CaribuScene
