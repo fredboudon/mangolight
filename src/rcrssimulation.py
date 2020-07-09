@@ -19,8 +19,8 @@ meteo = get_meteo()
 # The sensor give a value every 10 minutes
 measuredlight = get_sensor_data()
 
-measuredates = measuredlight.index
-mindate, maxdate = min(measuredates), max(measuredates)
+#measuredates = measuredlight.index
+#mindate, maxdate = min(measuredates), max(measuredates)
 
 # a digitized mango tree
 mango = pgl.Scene('../data/consolidated_mango3d-wd.bgeom')
@@ -29,7 +29,8 @@ idshift = 1000
 axis, north = (0,0,1), -(90-53)
 mango = Scene([Shape(AxisRotated(axis,radians(-north),sh.geometry),sh.appearance,sh.id,sh.parentId) for sh in mango])
 
-global_horiz_irradiance = meteo.loc[measuredates,'global_radiation']
+#global_horiz_irradiance = meteo.loc[measuredates,'global_radiation']
+global_horiz_irradiance = meteo.loc[:,'global_radiation']
 ghigroup = global_horiz_irradiance.groupby(pandas.Grouper(freq='D'))
 
 # Reflectance_Up, Transmittance_Up, Reflectance_Down, Transmittance_Down
