@@ -59,7 +59,8 @@ def get_dates():
     alldates.sort()
     return alldates
 
-targetdate = '2017-08-26'
+targetdate = ['2017-08-26']
+targetdates = ['2017-%s-%s' % (str(month).zfill(2), str(day).zfill(2)) for month in range(1,13) for day in [1,15]]  
 
 def toCaribuScene(mangoscene = mango, leaf_prop=leaf_prop, wood_prop=wood_prop, idshift=idshift) :
     from alinea.caribu.CaribuScene import CaribuScene
@@ -144,22 +145,24 @@ def generate_dataframe_data(aggregatedResults, name, ei, gus):
     return lres
 
 def partial_sky_res(scname, skyid, skydir, d, gus, outdir):
-    if test_partial_res(d, 'sky_'+str(skyid),  outdir):
+    tag = 'sky_'+str(skyid)
+    if test_partial_res(d, tag,  outdir):
         return
     s = pgl.Scene(scname)
     cs = toCaribuScene(s)
     ei = skydir[2][0]
     print('Sky ',skyid,':',*skydir)
     _, aggsky1 = caribu(cs, None, skydir)
-    lres = generate_dataframe_data(aggsky1, 'Diffus-'+str(skyid).zfill(2), ei, gus)
-    save_partial_res(lres, d, 'sky_'+str(skyid), outdir)
+    lres = generate_dataframe_data(aggsky1, 'Diffus-'+tag, ei, gus)
+    save_partial_res(lres, d, 'sky_'+tag, outdir)
 
 def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir):
-    if test_partial_res(d, 'sun_'+str(timeindex.hour)+'H',outdir):
+    tag = 'sun_'+str(timeindex.hour).zfill(2)+'H'
+    if test_partial_res(d, tag,outdir):
         return
     s = pgl.Scene(scname)
     cs = toCaribuScene(s)
-    print('Sun :',str(timeindex.hour)+'H')
+    print('Sun :',str(timeindex.hour).zfill(2)+'H')
 
     # We need to convert PAR global, direct, diffuse horizontal irradiance into Rc and Rs irradiance
 
@@ -169,8 +172,8 @@ def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, out
     suns, _ = normalize_energy(suns)
 
     _, aggsun = caribu(cs, suns, None)
-    lres = generate_dataframe_data(aggsun, 'Direct-'+str(timeindex.hour).zfill(2)+'H', 1, gus)
-    save_partial_res(lres, d, 'sun_'+str(timeindex.hour)+'H', outdir)
+    lres = generate_dataframe_data(aggsun, 'Direct-'+tag, 1, gus)
+    save_partial_res(lres, d, tag, outdir)
 
 
 def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multiprocessing.cpu_count()):
@@ -201,11 +204,11 @@ def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multi
 
         sky, _ = normalize_energy(sky)
 
-        for dirid, (az,el,ei) in enumerate(zip(*sky)):
-            if nbprocesses > 1:
-                pool.apply_async(partial_sky_res, args=(scname, dirid, [[az],[el],[ei]], d, gus, outdir))
-            else:
-                partial_sky_res(scname, dirid, [[az],[el],[ei]], d, gus, outdir)
+        #for dirid, (az,el,ei) in enumerate(zip(*sky)):
+        #    if nbprocesses > 1:
+        #        pool.apply_async(partial_sky_res, args=(scname, dirid, [[az],[el],[ei]], d, gus, outdir))
+        #    else:
+        #        partial_sky_res(scname, dirid, [[az],[el],[ei]], d, gus, outdir)
 
         for timeindex, row in sky_irr.iterrows():
            if row.dni > 0:
@@ -221,12 +224,11 @@ def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multi
         pool.close()
         pool.join()
 
-        res = dict() 
-        for fname in glob.glob(os.path.join(outdir,'result_%s_*.pkl' % str(d))):
-            lres = pickle.load(open(fname,'rb'))
-            os.remove(fname)
-            res.update(lres)
-        res = pandas.DataFrame(res)
+        res = [] 
+        for fname in glob.glob(os.path.join(outdir,'partial_result_%s_*.csv' % str(d))):
+            lres = pandas.read_csv(fname,'rb')
+            res.append(lres)
+        res = pandas.concat(res, axis=1,sort=False)
         if not outdir is None:
             if not os.path.exists(outdir):
                 os.mkdir(outdir)
@@ -251,5 +253,5 @@ if __name__ == '__main__':
     #mango = sample(mango,1000)
     #mango = pgl.Scene(mango)
     #pgl.Viewer.display(mango)
-    res = process_caribu(mango, targetdate, outdir = 'results-rcrs-'+str(D_SPHERE)+'-'+sys.platform, nbprocesses = nbproc)
+    res = process_caribu(mango, targetdates, outdir = 'results-rcrs-'+str(D_SPHERE)+'-'+sys.platform, nbprocesses = nbproc)
     #process_quasimc(mango)

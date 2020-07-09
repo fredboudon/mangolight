@@ -319,7 +319,7 @@ def plotdatamain():
         for i in range(1,len(sys.argv)):
             sensors.append(eval(sys.argv[i]))
     #plot_data(sensors, daterange=('2017-07-06','2017-07-10'))
-    plot_data(sensors, daterange=('2017-08-25','2017-08-28'))
+    plot_data(sensors) #, daterange=('2017-08-25','2017-08-28'))
     
 
 if __name__ == '__main__':

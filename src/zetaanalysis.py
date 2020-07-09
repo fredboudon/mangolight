@@ -318,4 +318,4 @@ if __name__ == '__main__':
     #show_mar_relation(rc,rs)
     #rc2,rs2 = generate_rcrs(get_data('results-rcrs-testlen60/result_10H_29682.csv'),10)
     #compare_mar_relation(rc,rs,rc2,rs2)    
-    show_mar_relation(get_data(),sys.argv[1] if len(sys.argv)>1 else None)
+    show_mar_relation(get_data('results-rcrs-60-linux/result_2017-08-26.csv'),sys.argv[1] if len(sys.argv)>1 else None)

@@ -31,6 +31,8 @@ def get_ds_datas(dir = 'benchmark-linux'):
     fnames = glob.glob(os.path.join(dir,pattern+'*.csv'))
     fnames.sort()
     fnames.append(os.path.join(dir,'result_10H_29682.csv'))
+    fnames.sort(key=lambda fn : retrieve_id(fn,pattern))
+    print(fnames)
     datas = ([retrieve_id(fn,pattern) for fn in fnames],[ get_data(fn) for fn in fnames])
     return datas
 
@@ -38,8 +40,8 @@ def get_perf_datas(dir = 'benchmark-linux'):
     import glob
     pattern = 'performance_10H_29682_ds'
     fnames = glob.glob(os.path.join(dir,pattern+'*.txt'))
-    fnames.sort()
     fnames.append(os.path.join(dir,'performance_10H_29682.txt'))
+    fnames.sort(key=lambda fn : retrieve_id(fn,pattern))
     def get_time(fn):
         with open(fn) as stream:
             return float(stream.read().split('-->')[1].strip())
@@ -60,29 +62,31 @@ def get_datas(direct = True, dirs = ['benchmark-darwin','benchmark-linux','bench
 
 
 
-def plot_ds_comparison(ds, data, drange = None, performances = None):
+def plot_ds_comparison(ds, data, drange = None,  performances = None, reference = 60):
     import matplotlib.pyplot as plt
     plt.figure(figsize=(15,8), dpi=100)
     ax = plt.subplot(231)
     wavelength = '10H-DirectRc'
-    ref = data[-1][wavelength]
+    print(ds)
+    refpos = ds.index(reference)
+    ref = data[refpos][wavelength]
     if drange is None:
-        drange = slice(0,-1)
+        drange = slice(0,len(ds))
     for i,d in zip(ds[drange],data[drange]):
-        plt.plot(d[wavelength],ref,'.',label='d_sphere '+str(i))
+        plt.plot(d[wavelength],ref,'.',label=str(i))
     plt.title('Comparison of simulated light energy')
     plt.ylabel('Rc')
-    plt.xlabel('Rc d_sphere 60')
+    plt.xlabel('Rc d_sphere '+str(reference))
     plt.legend()
 
     ax = plt.subplot(232)
     wavelength = '10H-DirectRs'
-    ref = data[-1][wavelength]
+    ref = data[refpos][wavelength]
     for i,d in zip(ds[drange],data[drange]):
-        plt.plot(d[wavelength],ref,'.',label='d_sphere '+str(i))
+        plt.plot(d[wavelength],ref,'.',label=str(i))
     plt.title('Comparison of simulated light energy')
     plt.ylabel('Rs')
-    plt.xlabel('Rs d_sphere 60')
+    plt.xlabel('Rs d_sphere '+str(reference))
     ax.yaxis.set_label_position("right")
     ax.yaxis.tick_right()
     plt.legend()
@@ -90,14 +94,14 @@ def plot_ds_comparison(ds, data, drange = None, performances = None):
 
     ax = plt.subplot(234)
     wavelength = '10H-DirectRc'
-    ref = data[-1][wavelength]
+    ref = data[refpos][wavelength]
     plt.boxplot([d[wavelength]-ref  for d in data[drange]], labels=ds[drange])
     plt.ylabel('Rc difference')
     #plt.legend()
 
     ax = plt.subplot(235)
     wavelength = '10H-DirectRs'
-    ref = data[-1][wavelength]
+    ref = data[refpos][wavelength]
     plt.boxplot([d[wavelength]-ref  for d in data[drange]], labels=ds[drange])
     plt.ylabel('Rs difference')
     ax.yaxis.set_label_position("right")
@@ -134,4 +138,4 @@ def plot_ds_comparison(ds, data, drange = None, performances = None):
 
 if __name__ == '__main__':
     #plot_comparison(get_datas())
-    plot_ds_comparison(*get_ds_datas(),slice(0,-1),get_perf_datas()) 
+    plot_ds_comparison(*get_ds_datas(),None,get_perf_datas()) 
