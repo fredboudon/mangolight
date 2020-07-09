@@ -222,19 +222,20 @@ def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multi
                else:
                    partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
 
-        pool.close()
-        pool.join()
 
-        res = [] 
-        for fname in glob.glob(os.path.join(outdir,'partial_result_%s_*.csv' % str(d))):
-            lres = pandas.read_csv(fname,'rb')
-            res.append(lres)
-        res = pandas.concat(res, axis=1,sort=False)
-        if not outdir is None:
-            if not os.path.exists(outdir):
-                os.mkdir(outdir)
-            res.to_csv(os.path.join(outdir,'result_%s.csv' % str(d)))
-        resdates[d] = res
+        #res = [] 
+        #for fname in glob.glob(os.path.join(outdir,'partial_result_%s_*.csv' % str(d))):
+        #    lres = pandas.read_csv(fname,'rb')
+        #    res.append(lres)
+        #res = pandas.concat(res, axis=1,sort=False)
+        #if not outdir is None:
+        #    if not os.path.exists(outdir):
+        #        os.mkdir(outdir)
+        #    res.to_csv(os.path.join(outdir,'result_%s.csv' % str(d)))
+        #resdates[d] = res
+
+    pool.close()
+    pool.join()
 
     os.remove(scname)
 
