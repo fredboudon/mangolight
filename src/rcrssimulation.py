@@ -7,7 +7,8 @@ from alinea.astk.meteorology.sky_irradiance import sky_irradiances
 from lightsimulator import *
 from measuredlight import *
 from math import *
-import os, sys
+import os, sys, datetime
+import numpy as np
 
 DEBUG = False
 
@@ -60,8 +61,8 @@ def get_dates():
     alldates.sort()
     return alldates
 
-targetdate = ['2017-08-26']
-targetdates = ['2017-%s-%s' % (str(month).zfill(2), str(day).zfill(2)) for month in range(1,13) for day in [8,22]]  
+#targetdate = ['2017-08-26']
+targetdates = ['2017-%s-%s' % (str(month).zfill(2), str(day).zfill(2)) for month in range(1,13) for day in [12,26]]  
 
 def toCaribuScene(mangoscene = mango, leaf_prop=leaf_prop, wood_prop=wood_prop, idshift=idshift) :
     from alinea.caribu.CaribuScene import CaribuScene
@@ -115,9 +116,8 @@ def save_partial_res(res, d, tag, outdir = None):
     if not os.path.exists(outdir):
         os.mkdir(outdir)
     pandas.DataFrame(res).to_csv(os.path.join(outdir,'partial_result_%s_%s.csv' % (str(d), tag)))
-    fname = os.path.join(outdir,'result_%s_%s.pkl' % (str(d), tag))
-    stream = open(fname,'wb')
-    pickle.dump(res, stream)
+    #fname = os.path.join(outdir,'partial_result_%s_%s.pkl' % (str(d), tag))
+    #pickle.dump(res, open(fname,'wb'))
 
 def test_partial_res(d, tag, outdir = None):
     fname = os.path.join(outdir,'partial_result_%s_%s.csv' % (str(d), tag))
@@ -135,35 +135,41 @@ def filter_res(values, gus):
     else:
         return [ values.get(i,0) for i in values.keys() if i // idshift in gus ]
 
-def generate_dataframe_data(aggregatedResults, name, ei, gus):
+def generate_dataframe_data(aggregatedResults, date, name, ei, gus, outdir):
     aggRc = filter_keys(aggregatedResults['Rc']['Ei'], gus)
     lres = dict()
     lres['Entity'] = ['incident']+list(aggRc)
     for wavelength in ['Rc','Rs','PAR']:
         for result in ['Ei','Ei_sup','Ei_inf','Eabs']:
             res = filter_res(aggregatedResults[wavelength][result], gus)
+            if sum(np.array(res) < -1e-5) > 0:
+                errormsg = str(datetime.datetime.now())+' : Error with '+name+' on '+wavelength+'-'+result+' : Negative values found.'
+                print(errormsg)
+                open(os.path.join(outdir,'error.log'),'a').write(errormsg+'\n')
             lres[name+'-'+wavelength+'-'+result] = [ei]+res
     return lres
 
 def partial_sky_res(scname, skyid, skydir, d, gus, outdir):
-    tag = 'sky_'+str(skyid)
-    if test_partial_res(d, tag,  outdir):
+    tag = str(skyid).zfill(2)
+    ftag = 'diffus_'+tag
+    if test_partial_res(d, ftag,  outdir):
         return
     s = pgl.Scene(scname)
     cs = toCaribuScene(s)
     ei = skydir[2][0]
-    print('Sky ',skyid,':',*skydir)
+    print('Sky '+tag,':',*skydir)
     _, aggsky1 = caribu(cs, None, skydir)
-    lres = generate_dataframe_data(aggsky1, 'Diffus-'+tag, ei, gus)
-    save_partial_res(lres, d, 'sky_'+tag, outdir)
+    lres = generate_dataframe_data(aggsky1, d, 'Diffus-'+tag, ei, gus, outdir)
+    save_partial_res(lres, d, ftag, outdir)
 
 def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir):
-    tag = 'sun_'+str(timeindex.hour).zfill(2)+'H'
-    if test_partial_res(d, tag,outdir):
+    tag = str(timeindex.hour).zfill(2)+'H'
+    ftag = 'direct_'+tag
+    if test_partial_res(d, ftag, outdir):
         return
     s = pgl.Scene(scname)
     cs = toCaribuScene(s)
-    print('Sun :',str(timeindex.hour).zfill(2)+'H')
+    print('Sun :',tag)
 
     # We need to convert PAR global, direct, diffuse horizontal irradiance into Rc and Rs irradiance
 
@@ -173,8 +179,8 @@ def partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, out
     suns, _ = normalize_energy(suns)
 
     _, aggsun = caribu(cs, suns, None)
-    lres = generate_dataframe_data(aggsun, 'Direct-'+tag, 1, gus)
-    save_partial_res(lres, d, tag, outdir)
+    lres = generate_dataframe_data(aggsun, d, 'Direct-'+tag, 1, gus, outdir)
+    save_partial_res(lres, d, ftag, outdir)
 
 
 def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multiprocessing.cpu_count()):
@@ -193,9 +199,9 @@ def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multi
 
     pool = multiprocessing.Pool(processes=nbprocesses)
 
-    for d in sdates:
+    for did, ldate in enumerate(sdates):
 
-        daydate = pandas.Timestamp(d, tz=localisation['timezone'])
+        daydate = pandas.Timestamp(ldate, tz=localisation['timezone'])
         day_global_horiz_radiation = ghigroup.get_group(daydate)
         hours = day_global_horiz_radiation.index
 
@@ -205,11 +211,12 @@ def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multi
 
         sky, _ = normalize_energy(sky)
 
-        #for dirid, (az,el,ei) in enumerate(zip(*sky)):
-        #    if nbprocesses > 1:
-        #        pool.apply_async(partial_sky_res, args=(scname, dirid, [[az],[el],[ei]], d, gus, outdir))
-        #    else:
-        #        partial_sky_res(scname, dirid, [[az],[el],[ei]], d, gus, outdir)
+        if did == 0:
+            for dirid, (az,el,ei) in enumerate(zip(*sky)):
+                if nbprocesses > 1:
+                    pool.apply_async(partial_sky_res, args=(scname, dirid, [[az],[el],[ei]], ldate, gus, outdir))
+            else:
+                partial_sky_res(scname, dirid, [[az],[el],[ei]], ldate, gus, outdir)
 
         for timeindex, row in sky_irr.iterrows():
            if row.dni > 0:
@@ -218,21 +225,10 @@ def process_caribu(scene, sdates, gus = None, outdir = None, nbprocesses = multi
                direct_horizontal_irradiance  = global_horizontal_irradiance - diffuse_horizontal_irradiance
 
                if nbprocesses > 1:
-                   pool.apply_async(partial_sun_res, args=(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir))
+                   pool.apply_async(partial_sun_res, args=(scname, timeindex, direct_horizontal_irradiance, ldate, gus, outdir))
                else:
-                   partial_sun_res(scname, timeindex, direct_horizontal_irradiance, d, gus, outdir)
+                   partial_sun_res(scname, timeindex, direct_horizontal_irradiance, ldate, gus, outdir)
 
-
-        #res = [] 
-        #for fname in glob.glob(os.path.join(outdir,'partial_result_%s_*.csv' % str(d))):
-        #    lres = pandas.read_csv(fname,'rb')
-        #    res.append(lres)
-        #res = pandas.concat(res, axis=1,sort=False)
-        #if not outdir is None:
-        #    if not os.path.exists(outdir):
-        #        os.mkdir(outdir)
-        #    res.to_csv(os.path.join(outdir,'result_%s.csv' % str(d)))
-        #resdates[d] = res
 
     pool.close()
     pool.join()
