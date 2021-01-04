@@ -18,14 +18,6 @@ def get_data(fname = 'results-rcrs-mac/result_2017-08-26.csv'):
     data.drop(columns=['Unnamed: 0'], inplace=True)
     data.set_index('Entity', inplace=True)
 
-    data.rename(columns={"DiffusRc-"+str(i): "DiffusRc-0"+str(i) for i in range(10)}, inplace = True)
-    data.rename(columns={"DiffusRs-"+str(i): "DiffusRs-0"+str(i) for i in range(10)}, inplace = True)
-
-    for i in range(10):
-        if str(i)+'H-DirectRc' in data.columns.values:
-            data.rename(columns={str(i)+'H-DirectRc': '0'+str(i)+'H-DirectRc' for i in range(10)}, inplace = True)
-        if str(i)+'H-DirectRs' in data.columns.values:
-            data.rename(columns={str(i)+'H-DirectRs': '0'+str(i)+'H-DirectRs' for i in range(10)}, inplace = True)
     return data        
 
 # -X represent the North

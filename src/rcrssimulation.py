@@ -35,9 +35,10 @@ global_horiz_irradiance = meteo.loc[:,'global_radiation']
 ghigroup = global_horiz_irradiance.groupby(pandas.Grouper(freq='D'))
 
 # Reflectance_Up, Transmittance_Up, Reflectance_Down, Transmittance_Down
-leaf_prop = { 'Rc' : (0.05015, 0.0116, 0.0782, 0.01215), 
-              'Rs' : (0.388, 0.3577, 0.43255, 0.35595),
-              'PAR' : (0.069039866, 0.117477242, 0.036254034, 0.03668661) }
+leaf_prop = { 'Rc' : (0.05, 0.007, 0.078, 0.007), 
+              'Rs' : (0.413, 0.36, 0.455, 0.353),
+              'PAR' : (0.067, 0.025, 0.108, 0.023) }
+
 wood_prop = { 'Rc' : (0.0001, 0.0001), 'Rs' : (0.0001, 0.0001), 'PAR' : (0.0001, 0.0001)}
 
 xcenter, ycenter = -21,   -40
@@ -251,5 +252,5 @@ if __name__ == '__main__':
     #mango = sample(mango,1000)
     #mango = pgl.Scene(mango)
     #pgl.Viewer.display(mango)
-    res = process_caribu(mango, targetdates, outdir = 'results-rcrs-'+str(D_SPHERE)+'-'+sys.platform, nbprocesses = nbproc)
+    res = process_caribu(mango, targetdates, outdir = 'results-rcrs-reunionpo-'+str(D_SPHERE)+'-'+sys.platform, nbprocesses = nbproc)
     #process_quasimc(mango)
