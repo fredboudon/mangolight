@@ -93,8 +93,8 @@ def caribu(scene, sun = None, sky = None, view = False, debug = False):
     print('... ',len(light),' sources.')
     scene.setLight(light)
     print('Run caribu')
-    raw, agg = scene.run(direct=False, infinite = True, split_face = True, d_sphere = D_SPHERE)
-    #raw, agg = scene.run(direct=True)
+    #raw, agg = scene.run(direct=False, infinite = True, split_face = True, d_sphere = D_SPHERE)
+    raw, agg = scene.run(direct=True, infinite = True, split_face = True)
     print('made in', time.time() - t)
     if view : 
         scene.plot(raw['Ei'])
@@ -252,5 +252,6 @@ if __name__ == '__main__':
     #mango = sample(mango,1000)
     #mango = pgl.Scene(mango)
     #pgl.Viewer.display(mango)
-    res = process_caribu(mango, targetdates, outdir = 'results-rcrs-reunionpo-'+str(D_SPHERE)+'-'+sys.platform, nbprocesses = nbproc)
+    #res = process_caribu(mango, targetdates, outdir = 'results-rcrs-reunionpo-'+str(D_SPHERE)+'-'+sys.platform, nbprocesses = nbproc)
+    res = process_caribu(mango, targetdates, outdir = 'results-rcrs-reunionpo-direct-'+sys.platform, nbprocesses = nbproc)
     #process_quasimc(mango)
