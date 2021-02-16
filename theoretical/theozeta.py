@@ -1,18 +1,5 @@
 import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib import cm
-
-def trans_m(p0, m, I0 = 1):
-    if abs(p0) < 1e-5 : 
-        if abs(m -1) < 1e-5 : return I0
-        return 0.
-    if abs(m -1) < 1e-5 : return I0* (1 - p0)
-    return I0*pow(p0,m-1)  * (1 - p0)
-
-
-def zeta_m(zeta_i, tR, tFR, m):
-    return zeta_i * pow(tR/tFR,m-1) * (1 - tR) / (1 - tFR)
+from display_theozeta import *
 
 
 # Reflectance_Up, Transmittance_Up, Reflectance_Down, Transmittance_Down
@@ -39,42 +26,35 @@ rR, rFR, rPAR = 0.06, 0.435, 0.08
 tR, tFR, tPAR = 0., 0.4, 0.0 
 rR, rFR, rPAR = 0., 0.4, 0.0
 
-def plot_zeta(tR = tR, tFR = tFR, tPAR = tPAR, m = 5, dm = 0.1):
-    #print(tR,tFR,tPAR)
-    ms = np.arange(1,m+1,dm)
-    zetas = list(map(lambda n : zeta_m(1,tR,tFR,n), ms))
-    par_transs = list(map(lambda n : percent_trans(tPAR,n), ms))
-    r_transs = list(map(lambda n : percent_trans(tR,n), ms))
-    fr_transs = list(map(lambda n : percent_trans(tFR,n), ms))
-    #print(par_transs)
-    #print(r_transs)
-    #print(fr_transs)
-    fig, (ax1, ax2) = plt.subplots(1, 2)
-    ax1.plot(par_transs,zetas,linestyle='--', marker='o', label='zeta')
-    ax1.legend()
-    ax2.plot(par_transs,r_transs,linestyle='--', marker='o', label='R_tr')
-    ax2.plot(par_transs,fr_transs,linestyle='--', marker='o', label='FR_tr')
-    ax2.legend()
-    plt.show()
+# def plot_zeta(tR = tR, tFR = tFR, tPAR = tPAR, m = 5, dm = 0.1):
+#     #print(tR,tFR,tPAR)
+#     ms = np.arange(1,m+1,dm)
+#     zetas = list(map(lambda n : zeta_m(1,tR,tFR,n), ms))
+#     par_transs = list(map(lambda n : percent_trans(tPAR,n), ms))
+#     r_transs = list(map(lambda n : percent_trans(tR,n), ms))
+#     fr_transs = list(map(lambda n : percent_trans(tFR,n), ms))
+#     #print(par_transs)
+#     #print(r_transs)
+#     #print(fr_transs)
+#     fig, (ax1, ax2) = plt.subplots(1, 2)
+#     ax1.plot(par_transs,zetas,linestyle='--', marker='o', label='zeta')
+#     ax1.legend()
+#     ax2.plot(par_transs,r_transs,linestyle='--', marker='o', label='R_tr')
+#     ax2.plot(par_transs,fr_transs,linestyle='--', marker='o', label='FR_tr')
+#     ax2.legend()
+#     plt.show()
 
 
-cmap = cm.get_cmap('summer')
-
-def plot_disks(values, ax, figcolorbar = None):
-    m = len(values)
-    norm = mpl.colors.Normalize(vmin=0,vmax=max(1,max(values)))
-    ax.plot([0,0],[-2,-1.1],c='brown',linewidth=40)
-    for i, v in enumerate(values):
-        if not np.isnan(v):
-          r = 1-(i/(m-1))
-          circle = plt.Circle((0, 0), r, color= cmap(norm(v)))
-          ax.add_patch(circle)
-    ax.set_xlim(-1.2,1.2)
-    ax.set_ylim(-1.2,1.2)
-    if figcolorbar:
-        figcolorbar.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap),ax=ax)
+def trans_m(p0, m, I0 = 1):
+    if abs(p0) < 1e-5 : 
+        if abs(m -1) < 1e-5 : return I0
+        return 0.
+    if abs(m -1) < 1e-5 : return I0* (1 - p0)
+    return I0*pow(p0,m-1)  * (1 - p0)
 
 
+def zeta_m(zeta_i, tR, tFR, m):
+    return zeta_i * pow(tR/tFR,m-1) * (1 - tR) / (1 - tFR)
 
 def transmitted(I0, nblayers, i, p0):
     d = np.array([0. for j in range(i+1)]+list(map(lambda n : trans_m(p0,n,I0), np.arange(1,nblayers-i))))
@@ -124,8 +104,6 @@ def scattering(sclevel, values, ref, tr, gapfraction):
     in_scat = np.array(values)
     sky = 0
     nvalues = values
-    #print(trfactors)
-    #print(sky_tr_fct)
     for i in range(sclevel):
         ref_scat_i0 = np.array(in_scat) * ref 
         ref_scat = reffactors.dot(ref_scat_i0)
@@ -163,34 +141,7 @@ def plot_zeta_scattering(gapfraction = 0,
     #print('FR')
     fr, fr_sky_scat = scattering(scatteringlevel, fr, rFR, tFR, gapfraction)
     par_sky, r_sky, fr_sky = sky+par_sky_scat, sky+r_sky_scat, sky+fr_sky_scat
-
-    zetas = r/fr
-    fig, axes = plt.subplots(2, 3, figsize=(15, 8))
-    (ax1, ax2, ax3), (ax4, ax5, ax6) = axes
-    ax1.plot(par,zetas,linestyle='--', marker='o', label='zeta', color='blue')
-    ax1.set_xlim(0,max(1,max(par)))
-    ax1.set_ylim(0,max(1,max(zetas)))
-    ax1.legend()
-    ax2.plot(ranks,r,linestyle='--', marker='o', label='R_tr', color='red')
-    ax2.plot([0],r_sky, marker='o', color='red')
-    ax2.plot(ranks,fr,linestyle='--', marker='o', label='FR_tr', color='purple')
-    ax2.plot([0],fr_sky, marker='o', color='purple')
-    ax2.plot(ranks,par,linestyle='--', marker='o', label='PAR_tr', color='green')
-    ax2.plot([0],par_sky, marker='o', color='green')
-    #ax2.plot(ranks,zetas,linestyle='--', marker='o', label='Zeta', color='blue')
-    ax2.legend()
-    #ax2.set_xlim(0,max(1,max(par)))
-    ax2.set_ylim(0,max(1,max(par), max(r),max(fr)))#,max(zetas)))
-    m = plot_disks(zetas, ax3, fig)
-    ax3.set_title('Zeta')
-    plot_disks(par, ax4, fig)
-    ax4.set_title('PAR')
-    plot_disks(r, ax5, fig)
-    ax5.set_title('R')
-    plot_disks(fr, ax6, fig)
-    ax6.set_title('FR')
-    #ax4.plot(np.full((m), 0.5),np.full((m), 0.5), marker='o', markersize=np.arange(1,m+1,1))
-    plt.show()
+    plot_zeta_analysis(par, r, fr, par_sky, r_sky, fr_sky)
 
 
 def plot_zeta_scattering_simp(gapfraction = 0., 
