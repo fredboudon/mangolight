@@ -125,7 +125,7 @@ def scattering(sclevel, values, ref, tr, gapfraction):
     sky = 0
     nvalues = values
     #print(trfactors)
-    #print(sky_ref_fct)
+    #print(sky_tr_fct)
     for i in range(sclevel):
         ref_scat_i0 = np.array(in_scat) * ref 
         ref_scat = reffactors.dot(ref_scat_i0)
@@ -165,8 +165,8 @@ def plot_zeta_scattering(gapfraction = 0,
     par_sky, r_sky, fr_sky = sky+par_sky_scat, sky+r_sky_scat, sky+fr_sky_scat
 
     zetas = r/fr
-    fig, axes = plt.subplots(3, 2, figsize=(14, 18))
-    (ax1, ax2), (ax3, ax4), (ax5, ax6) = axes
+    fig, axes = plt.subplots(2, 3, figsize=(15, 8))
+    (ax1, ax2, ax3), (ax4, ax5, ax6) = axes
     ax1.plot(par,zetas,linestyle='--', marker='o', label='zeta', color='blue')
     ax1.set_xlim(0,max(1,max(par)))
     ax1.set_ylim(0,max(1,max(zetas)))
@@ -193,7 +193,7 @@ def plot_zeta_scattering(gapfraction = 0,
     plt.show()
 
 
-def plot_zeta_scattering_simp(gapfraction = 0, 
+def plot_zeta_scattering_simp(gapfraction = 0., 
                       pR = (tR+rR)/2, pFR = (tFR+rFR)/2, pPAR = (tPAR+rPAR)/2,
                       nblayers = 5, scatteringlevel = 50):
     plot_zeta_scattering(gapfraction = gapfraction, 
