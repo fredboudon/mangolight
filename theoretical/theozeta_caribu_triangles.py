@@ -28,6 +28,8 @@ def compute_scene(gapfraction = 0,
     invgf = 1 - gapfraction
 
     for lid in range(1,nblayers+1):
+        tri_label = 1000
+        num_tri = 1
         sp = Sphere(nblayers - lid)
         if gapfraction > 0:
             sp.apply(t)
@@ -46,11 +48,13 @@ def compute_scene(gapfraction = 0,
                 p2b = p0b + v2 * gapfraction
                 pts += [p0b, p1b, p2b]
                 indices.append([3*i,3*i+1,3*i+2])
-            sp = TriangleSet(pts, indices)
-        scene.add(Shape(sp, id = lid))
-        opt['FR'][lid] = FR
-        opt['R'][lid] = R
-        opt['PAR'][lid] = PAR
+                sp = TriangleSet(pts, indices)
+                id_tri =  tri_label*lid + num_tri
+                scene.add(Shape(sp, id = id_tri))
+                num_tri += 1
+                opt['FR'][tri_label] = FR
+                opt['R'][tri_label] = R
+                opt['PAR'][tri_label] = PAR
 
     return scene, opt
 
