@@ -21,7 +21,7 @@ def plot_disks(values, ax, figcolorbar = None):
 
 
 def plot_zeta_analysis(par, r, fr, par_sky = None, r_sky = None, fr_sky = None):
-    ranks = range(1,len(par)+1)
+    ranks = range(1001,(len(par)+1)*1000,1000)
     zetas = r/fr
     fig, axes = plt.subplots(2, 3, figsize=(15, 8))
     (ax1, ax2, ax3), (ax4, ax5, ax6) = axes

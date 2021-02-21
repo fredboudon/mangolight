@@ -52,35 +52,37 @@ def compute_scene(gapfraction = 0,
                 id_tri =  tri_label*lid + num_tri
                 scene.add(Shape(sp, id = id_tri))
                 num_tri += 1
-                opt['FR'][tri_label] = FR
-                opt['R'][tri_label] = R
-                opt['PAR'][tri_label] = PAR
+                opt['FR'][id_tri] = FR
+                opt['R'][id_tri] = R
+                opt['PAR'][id_tri] = PAR
 
     return scene, opt
 
 def compute_zeta_caribu(gapfraction = 0, 
                       tR = tR, tFR = tFR, tPAR = tPAR,
                       rR = rR, rFR = rFR, rPAR = rPAR, 
-                      nblayers = 5, resultingscene = ''):
+                      nblayers = 1, resultingscene = ''):
     assert (tR+rR) <= 1
     assert (tFR+rFR) <= 1
     assert (tPAR+rPAR) <= 1
 
-    ranks = range(1,nblayers+1)
+    ranks = range(1001, (nblayers+1)*1000,1000)
     scene, opt = compute_scene(gapfraction, tR, tFR, tPAR, rR, rFR, rPAR, nblayers)
 
     # Soleil vertical
     soleil = [(1.0, (0., -0.0, -1))]
 
-    # Viewer.display(s_prov)
+    #Viewer.display(scene)
+    print(len(scene))
+    #print(scene[0].id)
     cc_scene = CaribuScene(scene=scene, opt=opt, light=soleil)
 
     current_time_of_the_system = time.time()
-    raw, aggregated = cc_scene.run(direct=False, 
+    raw, aggregated = cc_scene.run(direct=True,
                                         infinite=False,
                                         split_face=False)  # ,sensors=dico_capt)#,screen_resolution=12000)
     execution_time = int(time.time() - current_time_of_the_system)
-    #print('Execution time', execution_time)
+    print('Execution time', execution_time)
     # print aggregated_direct
     #print('R ', aggregated['R'])
     #print('FR ', aggregated['FR'])
