@@ -78,7 +78,7 @@ def compute_zeta_caribu(gapfraction = 0,
     cc_scene = CaribuScene(scene=scene, opt=opt, light=soleil)
 
     current_time_of_the_system = time.time()
-    raw, aggregated = cc_scene.run(direct=True,
+    raw, aggregated = cc_scene.run(direct=False,
                                         infinite=False,
                                         split_face=False)  # ,sensors=dico_capt)#,screen_resolution=12000)
     execution_time = int(time.time() - current_time_of_the_system)
@@ -88,10 +88,15 @@ def compute_zeta_caribu(gapfraction = 0,
     #print('FR ', aggregated['FR'])
     #print('PAR ', aggregated['PAR'])
 
-    par = np.array([aggregated['PAR']['Ei'][lid] for lid in ranks])
-    r = np.array([aggregated['R']['Ei'][lid] for lid in ranks])
-    fr = np.array([aggregated['FR']['Ei'][lid] for lid in ranks])
+    # par = np.array([aggregated['PAR']['Ei'][lid] for lid in ranks])
+    # r = np.array([aggregated['R']['Ei'][lid] for lid in ranks])
+    # fr = np.array([aggregated['FR']['Ei'][lid] for lid in ranks])
+    # res = (par, r, fr, None, None, None)
+    par = np.array([aggregated['PAR']['Ei'][lid] for lid in aggregated['PAR']['Ei'].keys()])
+    r = np.array([aggregated['R']['Ei'][lid] for lid in aggregated['PAR']['Ei'].keys()])
+    fr = np.array([aggregated['FR']['Ei'][lid] for lid in aggregated['PAR']['Ei'].keys()])
     res = (par, r, fr, None, None, None)
+
     if resultingscene:
         sc, v = cc_scene.plot(raw[resultingscene]['Ei'], display=False)
         return par, r, fr, None, None, None, sc
