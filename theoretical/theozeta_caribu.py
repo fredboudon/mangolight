@@ -1,7 +1,6 @@
 import numpy as np
 from alinea.caribu.CaribuScene import CaribuScene
 from openalea.plantgl.all import *
-from alinea.caribu.sky_tools import GenSky, GetLight, Gensun, GetLightsSun
 import time, datetime
 from display_theozeta import *
 from random import uniform
