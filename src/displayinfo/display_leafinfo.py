@@ -12,14 +12,22 @@ mango = pgl.Scene([sh for sh in mango if sh.id % idshift > 0])
 def apply_cmap_from_values(values, cmap = 'jet'):
     pmap = cm.PglMaterialMap(min(values),max(values), cmap)
     nsc = pgl.Scene()
-    values = dict(values)
+    def toint(v):
+        try:
+            return int(v)
+        except:
+            return v
+    values = dict([(toint(k),v) for k,v in values.items()])
     for sh in mango:
         nsc.add(pgl.Shape(sh.geometry,pmap(values[sh.id]),sh.id))
     nsc += pmap.pglrepr()
     return nsc
 
 def read_data(fname):
-    return pd.read_csv(fname, index_col = 0)
+    data = pd.read_csv(fname, index_col = 0)
+    if 'Entity' in data.columns:
+        data = data.set_index('Entity') 
+    return data
 
 def scene_from_data(fname_or_data, colname):
     if isinstance(fname_or_data, str):
