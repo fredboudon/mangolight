@@ -13,20 +13,21 @@ To use it with Binder without any installation: [![Binder](https://mybinder.org/
 - Prepare conda environment: 
 
 ```bash
-conda create -y -n pgl -c fredboudon -c conda-forge python=3.7 \
-    openalea.pgljupyter jupyterlab ipywidgets ipython=7 matplotlib git
-```
-
-- Activate conda environment: 
-
-```bash
-conda activate pgl
+conda create -y -n pgl -c fredboudon -c conda-forge python=3.7 openalea.pgljupyter jupyterlab ipywidgets ipython=7 matplotlib git
 ```
 
 - Retrieve the files of the project: 
 
 ```bash
 git clone https://github.com/fredboudon/mangolight.git
+```
+
+# Activation and use of the environment
+
+- Activate conda environment: 
+
+```bash
+conda activate pgl
 ```
 
 - Enter the project visualization subfolder: 

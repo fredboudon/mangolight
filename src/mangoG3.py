@@ -42,6 +42,11 @@ def is_gu_point(mtg, vid):
         Conversely, some point that mark the begining of a branch do not represent any GU."""
     return mtg.edge_type(vid) == '<'
 
+def is_gu_apical(mtg, vid):
+    """ A GU Point is a node in the graph that represent both a digitized point and a GU.
+        Conversely, some point that mark the begining of a branch do not represent any GU."""
+    return mtg.edge_type(get_gu_bottom_point(mtg,vid)) == '<'
+
 def get_gu_bottom_point(mtg,vid):
     return mtg.parent(vid)
 
@@ -222,3 +227,15 @@ def repare_mango_lighted():
 
 
 
+def export_to_array():
+    mtg = get_G3_mtg()
+    idmap = {}
+    table = []
+    for i, vid in enumerate(get_all_gus(mtg)):
+        dict_gu_prop = {}
+        dict_gu_prop["is_apical"] = is_gu_apical(mtg, vid)
+        dict_gu_prop["nature"] = 'NA'
+        dict_gu_prop["appearance_month"] = 'NA'
+        dict_gu_prop["ancestor_nature"] = 'NA'
+        dict_gu_prop["ancestor_is_apical"] = 'NA'
+        
