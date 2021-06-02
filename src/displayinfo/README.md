@@ -39,5 +39,5 @@ cd src/displayinfo
 - Launch jupyterlab: 
 
 ```bash
-jupyterlab display.ipynb
+jupyter lab display.ipynb
 ```
